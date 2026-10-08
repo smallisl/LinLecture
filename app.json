@@ -8,7 +8,12 @@
     "scheme": "linlecture",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "LinLecture에서 강의 음성을 텍스트로 변환하기 위해 음성 인식 권한이 필요합니다.",
+        "NSMicrophoneUsageDescription": "LinLecture에서 강의 음성을 인식하기 위해 마이크 사용 권한이 필요합니다."
+      },
+      "bundleIdentifier": "com.smallisl.LinLecture"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +22,13 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
     },
     "web": {
       "output": "static",
@@ -31,6 +42,14 @@
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      "expo-audio",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "LinLecture에서 강의 음성을 인식하기 위해 마이크 사용 권한이 필요합니다.",
+          "speechRecognitionPermission": "LinLecture에서 강의 음성을 텍스트로 변환하기 위해 음성 인식 권한이 필요합니다."
         }
       ]
     ],

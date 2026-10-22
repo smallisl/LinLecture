@@ -20,13 +20,16 @@ function pcmRms(pcmBuffer) {
   return Math.sqrt(sum / samples);
 }
 
-// 이 값보다 작으면 무음으로 본다. 강의실에서 너무 많이 건너뛰면
-// SILENCE_RMS=50 node server.js 처럼 낮춰서 실행한다.
-const SILENCE_RMS = Number(process.env.SILENCE_RMS) || 100;
+// 이 값보다 작으면 무음으로 본다. 기본값 0 = 사용 안 함.
+// 실측(2026-10-23): iPhone 스트림은 말할 때도 RMS 12~14 정도로 매우 작아서
+// 처음 정한 고정값 100 이 모든 구간을 무음으로 버렸다. 환경마다 음량이 달라
+// 기본으로는 끄고, 서버 로그의 volume(RMS) 값을 보고 필요할 때만
+// SILENCE_RMS=8 node server.js 처럼 켜서 쓴다.
+const SILENCE_RMS = Math.max(0, Number(process.env.SILENCE_RMS ?? 0) || 0);
 
 function isSilent(pcmBuffer) {
   const rms = pcmRms(pcmBuffer);
-  return { silent: rms < SILENCE_RMS, rms };
+  return { silent: SILENCE_RMS > 0 && rms < SILENCE_RMS, rms };
 }
 
 const normalize = (text) => text.replace(/\s+/g, "").toLowerCase();

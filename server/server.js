@@ -4,11 +4,13 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const { execFile } = require("child_process");
+const { logUsage, LOG_PATH, ensureLogFile } = require("./usage-log");
 
 const app = express();
 const PORT = 3000;
 
-const WHISPER_PATH = "/opt/homebrew/bin/whisper-cli";
+const WHISPER_PATH =
+  process.env.WHISPER_PATH || "/opt/homebrew/bin/whisper-cli";
 
 const MODEL_PATH = path.join(
   __dirname,
@@ -118,7 +120,17 @@ app.post("/transcribe-base64", (req, res) => {
     sampleRate,
     channels,
     chunkNumber,
+    sessionId,
+    subject,
   } = req.body || {};
+
+  // 실사용 기록용 공통 정보
+  const usage = {
+    timestamp: new Date().toISOString(),
+    sessionId: sessionId || "",
+    subject: subject || "",
+    chunkNumber: chunkNumber ?? "",
+  };
 
   if (!audioBase64) {
     return res.status(400).json({
@@ -144,6 +156,10 @@ app.post("/transcribe-base64", (req, res) => {
   console.log("PCM bytes:", pcmBuffer.length);
   console.log("sampleRate:", actualSampleRate);
   console.log("channels:", actualChannels);
+
+  usage.audioSec = (
+    pcmBuffer.length / (actualSampleRate * actualChannels * 2)
+  ).toFixed(2);
 
   const wavBuffer = createWavBuffer(
     pcmBuffer,
@@ -187,6 +203,13 @@ app.post("/transcribe-base64", (req, res) => {
         if (error) {
           console.error("❌ Whisper 오류:", error.message);
 
+          logUsage({
+            ...usage,
+            whisperSec: elapsed.toFixed(2),
+            status: "stt_error",
+            error: error.message,
+          });
+
           return res.status(500).json({
             error: "Whisper 음성 인식 실패",
             detail: error.message,
@@ -204,10 +227,26 @@ app.post("/transcribe-base64", (req, res) => {
         );
 
         let translation = "";
+        let translateSec = 0;
 
         if (transcript) {
+          const translateStartedAt = Date.now();
           translation = await translateToVietnamese(transcript);
+          translateSec = (Date.now() - translateStartedAt) / 1000;
         }
+
+        logUsage({
+          ...usage,
+          whisperSec: elapsed.toFixed(2),
+          translateSec: translateSec.toFixed(2),
+          koChars: transcript.length,
+          viChars: translation.length,
+          status: !transcript
+            ? "empty"
+            : translation
+              ? "ok"
+              : "translate_error",
+        });
 
         return res.json({
           text: transcript,
@@ -224,6 +263,12 @@ app.post("/transcribe-base64", (req, res) => {
       }
     }
   );
+});
+
+// 실사용 기록 다운로드 (브라우저에서 http://<IP>:3000/usage.csv)
+app.get("/usage.csv", (req, res) => {
+  ensureLogFile();
+  res.download(LOG_PATH, "usage.csv");
 });
 
 app.listen(PORT, "0.0.0.0", () => {

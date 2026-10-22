@@ -18,3 +18,5 @@ server/models/*.bin
 
 expo-env.d.ts
 # @end expo-cli
+
+server/uploads/

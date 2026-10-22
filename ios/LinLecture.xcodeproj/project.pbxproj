@@ -25,9 +25,9 @@
 		3E0E853A52A7CEA5B2829268 /* Pods-LinLecture.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LinLecture.release.xcconfig"; path = "Target Support Files/Pods-LinLecture/Pods-LinLecture.release.xcconfig"; sourceTree = "<group>"; };
 		9F90AEAE85EBBE5291C8BD8F /* libPods-LinLecture.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-LinLecture.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = LinLecture/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B736915E1E18A990DF49F7F2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = LinLecture/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B736915E1E18A990DF49F7F2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = LinLecture/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		C5ECE6E92F3F46DD80D85143 /* expo.icon */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = expo.icon; path = LinLecture/expo.icon; sourceTree = "<group>"; };
+		C5ECE6E92F3F46DD80D85143 /* expo.icon */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = expo.icon; path = LinLecture/expo.icon; sourceTree = "<group>"; };
 		D8E9EC1F70F39D08FC3A4FF9 /* Pods-LinLecture.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-LinLecture.debug.xcconfig"; path = "Target Support Files/Pods-LinLecture/Pods-LinLecture.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = LinLecture/AppDelegate.swift; sourceTree = "<group>"; };
@@ -114,7 +114,6 @@
 				D8E9EC1F70F39D08FC3A4FF9 /* Pods-LinLecture.debug.xcconfig */,
 				3E0E853A52A7CEA5B2829268 /* Pods-LinLecture.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -170,7 +169,6 @@
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
-						DevelopmentTeam = V9LU26SJ37;
 						LastSwiftMigration = 1250;
 						ProvisioningStyle = Automatic;
 					};

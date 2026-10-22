@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fromByteArray } from 'base64-js';
 import type { AudioStreamBuffer } from 'expo-audio';
 import { requestRecordingPermissionsAsync, setAudioModeAsync, useAudioStream } from 'expo-audio';
@@ -6,23 +5,15 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-const SERVER_URL = "http://172.31.213.218:3000";
-const STORAGE_KEY = '@LinLecture:lectures';
+import { SERVER_URL } from '@/constants/config';
+import { addLecture, type LectureRecord, type Segment } from '@/lib/lectures';
+
 const DEFAULT_SUBJECT = '임베디드시스템및실습';
 const SAMPLE_RATE = 16000;
 const CHANNELS = 1;
 const CHUNK_SECONDS = 6;
 
-type Segment = { id: number; seconds: number; korean: string; vietnamese: string };
 type AudioChunk = { number: number; data: Uint8Array; sampleRate: number; channels: number };
-type LectureRecord = {
-  id: string;
-  subject: string;
-  startedAt: string;
-  endedAt: string;
-  korean: string;
-  vietnamese: string;
-};
 
 export default function LectureScreen() {
   const { subject } = useLocalSearchParams<{ subject?: string | string[] }>();
@@ -61,6 +52,11 @@ export default function LectureScreen() {
   const savingRef = useRef(false);
   const hadChunkErrorRef = useRef(false);
   const closedRef = useRef(false);
+  // 실사용 기록용 통계 + 저장할 북마크
+  const sessionIdRef = useRef('');
+  const statsRef = useRef({ sent: 0, recognized: 0, errors: 0, latencyMs: 0 });
+  const segmentsRef = useRef<Segment[]>([]);
+  const bookmarksRef = useRef<number[]>([]);
   const subjectRef = useRef(selectedSubject);
   subjectRef.current = selectedSubject;
 
@@ -90,18 +86,24 @@ export default function LectureScreen() {
         Alert.alert('저장할 내용 없음', '인식된 강의 내용이 없어 저장하지 않았습니다.');
         return;
       }
+      const stats = statsRef.current;
       const item: LectureRecord = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        id: sessionIdRef.current || `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
         subject: subjectRef.current,
         startedAt: startedAtRef.current || new Date().toISOString(),
         endedAt: new Date().toISOString(),
         korean,
         vietnamese,
+        bookmarks: segmentsRef.current.filter(segment => bookmarksRef.current.includes(segment.id)),
+        stats: {
+          durationSec: elapsedRef.current, // 일시정지 시간을 뺀 실제 녹음 시간
+          chunksSent: stats.sent,
+          chunksRecognized: stats.recognized,
+          chunkErrors: stats.errors,
+          avgLatencySec: stats.sent ? Math.round(stats.latencyMs / stats.sent / 100) / 10 : 0,
+        },
       };
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
-      const previous: unknown = raw ? JSON.parse(raw) : [];
-      if (!Array.isArray(previous)) throw new Error('저장 데이터 형식이 올바르지 않습니다.');
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([item, ...previous]));
+      await addLecture(item);
       setSaveFailed(false);
       setSaveFinished(true);
       setStatusMessage('강의가 저장되었습니다');
@@ -132,6 +134,8 @@ export default function LectureScreen() {
     }
     sendingRef.current = true;
     setProcessing(true);
+    const requestStartedAt = Date.now();
+    statsRef.current.sent += 1;
     try {
       const response = await fetch(`${SERVER_URL}/transcribe-base64`, {
         method: 'POST',
@@ -141,24 +145,30 @@ export default function LectureScreen() {
           sampleRate: chunk.sampleRate,
           channels: chunk.channels,
           chunkNumber: chunk.number,
+          sessionId: sessionIdRef.current,
+          subject: subjectRef.current,
         }),
       });
       const body = await response.text();
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${body}`);
       const data: { text?: string; translation?: string } = JSON.parse(body);
+      statsRef.current.latencyMs += Date.now() - requestStartedAt;
       if (closedRef.current) return;
       if (data.text?.trim() || data.translation?.trim()) {
-        setSegments(previous => [...previous, {
+        const segment: Segment = {
           id: chunk.number,
           seconds: Math.max(0, (chunk.number - 1) * CHUNK_SECONDS),
           korean: data.text?.trim() || '',
           vietnamese: data.translation?.trim() || '',
-        }]);
+        };
+        segmentsRef.current = [...segmentsRef.current, segment];
+        setSegments(segmentsRef.current);
       }
       if (data.text?.trim()) {
         const value = data.text.trim();
         transcriptRef.current = transcriptRef.current ? transcriptRef.current + '\n' + value : value;
         setTranscript(transcriptRef.current);
+        statsRef.current.recognized += 1;
         setChunkCount(previous => previous + 1);
         console.log(`📝 Chunk ${chunk.number}: ${value}`);
       }
@@ -169,6 +179,8 @@ export default function LectureScreen() {
         console.log(`🇻🇳 Chunk ${chunk.number}: ${value}`);
       }
     } catch (error: any) {
+      statsRef.current.latencyMs += Date.now() - requestStartedAt;
+      statsRef.current.errors += 1;
       if (!closedRef.current) {
         hadChunkErrorRef.current = true;
         setErrorMessage(error?.message || '음성 인식 또는 번역 중 오류가 발생했습니다.');
@@ -243,6 +255,10 @@ export default function LectureScreen() {
       transcriptRef.current = '';
       translationRef.current = '';
       startedAtRef.current = new Date().toISOString();
+      sessionIdRef.current = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      statsRef.current = { sent: 0, recognized: 0, errors: 0, latencyMs: 0 };
+      segmentsRef.current = [];
+      bookmarksRef.current = [];
       hadChunkErrorRef.current = false;
       setTranscript('');
       setSegments([]);
@@ -265,6 +281,14 @@ export default function LectureScreen() {
       setErrorMessage(error?.message || '강의를 시작할 수 없습니다.');
       setStatusMessage('강의 시작 실패');
     }
+  };
+
+  const toggleBookmark = (id: number) => {
+    const next = bookmarksRef.current.includes(id)
+      ? bookmarksRef.current.filter(value => value !== id)
+      : [...bookmarksRef.current, id];
+    bookmarksRef.current = next;
+    setBookmarks(next);
   };
 
   const togglePause = async () => {
@@ -377,7 +401,7 @@ export default function LectureScreen() {
           <View key={item.id} style={styles.segmentCard}>
             <View style={styles.segmentTop}>
               <Text style={styles.timestamp}>{formatTime(item.seconds)}</Text>
-              <Pressable onPress={() => setBookmarks(previous => previous.includes(item.id) ? previous.filter(id => id !== item.id) : [...previous, item.id])} accessibilityLabel="북마크">
+              <Pressable onPress={() => toggleBookmark(item.id)} accessibilityLabel="북마크">
                 <Text style={[styles.bookmark, bookmarks.includes(item.id) && styles.bookmarkActive]}>{bookmarks.includes(item.id) ? '♥' : '♡'}</Text>
               </Pressable>
             </View>

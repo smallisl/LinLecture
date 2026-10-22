@@ -5,6 +5,8 @@ const fs = require("fs");
 const path = require("path");
 const { execFile } = require("child_process");
 const { logUsage, LOG_PATH, ensureLogFile } = require("./usage-log");
+const { isSilent, isPromptEcho } = require("./speech-filter");
+const { findTerms } = require("./glossary");
 
 const app = express();
 const PORT = 3000;
@@ -21,6 +23,10 @@ const MODEL_PATH = path.join(
 const uploadDir = path.join(__dirname, "uploads");
 
 const TRANSLATE_URL = "http://127.0.0.1:5000/translate";
+
+// Whisper 에 주는 전공 용어 힌트 (환각 필터에서도 사용)
+const WHISPER_PROMPT =
+  "임베디드 시스템, 마이크로컨트롤러, 아두이노, 라즈베리파이, 센서, 액추에이터, 인터럽트, 운영체제, 프로세스, 스레드, 메모리, CPU, GPIO, UART, SPI, I2C, PWM, 실시간 시스템, 회로, 데이터베이스, 알고리즘, 자료구조";
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -161,6 +167,21 @@ app.post("/transcribe-base64", (req, res) => {
     pcmBuffer.length / (actualSampleRate * actualChannels * 2)
   ).toFixed(2);
 
+  // 무음 구간은 Whisper 를 거치지 않는다.
+  const { silent, rms } = isSilent(pcmBuffer);
+  console.log("volume(RMS):", rms.toFixed(0));
+  if (silent) {
+    console.log("🔇 무음 구간 - 건너뜀");
+    logUsage({ ...usage, status: "silence" });
+    return res.json({
+      text: "",
+      translation: "",
+      terms: [],
+      skipped: "silence",
+      chunkNumber: chunkNumber ?? null,
+    });
+  }
+
   const wavBuffer = createWavBuffer(
     pcmBuffer,
     actualSampleRate,
@@ -188,7 +209,7 @@ app.post("/transcribe-base64", (req, res) => {
     "-l",
     "ko",
     "--prompt",
-    "임베디드 시스템, 마이크로컨트롤러, 아두이노, 라즈베리파이, 센서, 액추에이터, 인터럽트, 운영체제, 프로세스, 스레드, 메모리, CPU, GPIO, UART, SPI, I2C, PWM, 실시간 시스템, 회로, 데이터베이스, 알고리즘, 자료구조",
+    WHISPER_PROMPT,
     "--no-timestamps",
   ];
 
@@ -217,6 +238,24 @@ app.post("/transcribe-base64", (req, res) => {
         }
 
         const transcript = stdout.trim();
+
+        // 프롬프트 단어 나열(환각)이면 버린다.
+        if (transcript && isPromptEcho(transcript, WHISPER_PROMPT)) {
+          console.log("🚫 프롬프트 반복으로 판단해 버림:", transcript);
+          logUsage({
+            ...usage,
+            whisperSec: elapsed.toFixed(2),
+            koChars: transcript.length,
+            status: "filtered",
+          });
+          return res.json({
+            text: "",
+            translation: "",
+            terms: [],
+            skipped: "prompt_echo",
+            chunkNumber: chunkNumber ?? null,
+          });
+        }
 
         console.log(
           `⚡ Whisper 처리 시간: ${elapsed.toFixed(2)}초`
@@ -248,9 +287,15 @@ app.post("/transcribe-base64", (req, res) => {
               : "translate_error",
         });
 
+        const terms = findTerms(transcript);
+        if (terms.length) {
+          console.log("📘 전공 용어:", terms.map((t) => `${t.ko}=${t.vi}`).join(", "));
+        }
+
         return res.json({
           text: transcript,
           translation: translation,
+          terms,
           processingTime: elapsed,
           chunkNumber: chunkNumber ?? null,
         });

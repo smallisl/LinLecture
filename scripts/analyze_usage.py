@@ -37,8 +37,10 @@ INK_2 = "#52514e"
 GRID = "#e4e3df"
 BLUE = "#2a78d6"  # series 1
 ORANGE = "#eb6834"  # series 2
-STATUS = {"ok": "#0ca30c", "empty": "#a3a29c", "translate_error": "#fab219", "stt_error": "#d03b3b"}
-STATUS_LABEL = {"ok": "성공", "empty": "무음/인식 없음", "translate_error": "번역 실패", "stt_error": "인식 실패"}
+STATUS = {"ok": "#0ca30c", "silence": "#c3c2b7", "empty": "#a3a29c", "filtered": "#ec835a",
+          "translate_error": "#fab219", "stt_error": "#d03b3b"}
+STATUS_LABEL = {"ok": "성공", "silence": "무음 건너뜀", "empty": "인식 없음", "filtered": "환각 걸러냄",
+                "translate_error": "번역 실패", "stt_error": "인식 실패"}
 
 for name in ["Apple SD Gothic Neo", "AppleGothic", "Malgun Gothic", "NanumGothic", "Noto Sans CJK KR"]:
     if any(f.name == name for f in font_manager.fontManager.ttflist):
@@ -139,8 +141,8 @@ def analyze_csv(path, out, lines):
         finish(fig, ax, "강의별 평균 처리 시간", out / "latency_by_session.png")
 
     # 2) 구간 처리 결과
-    order = [k for k in ["ok", "empty", "translate_error", "stt_error"] if status.get(k)]
-    fig, ax = plt.subplots(figsize=(7, 3.4))
+    order = [k for k in STATUS if status.get(k)]
+    fig, ax = plt.subplots(figsize=(max(7, 1.5 * len(order) + 1), 3.4))
     bars = ax.bar([STATUS_LABEL[k] for k in order], [status[k] for k in order],
                   color=[STATUS[k] for k in order], width=0.55)
     for bar, k in zip(bars, order):

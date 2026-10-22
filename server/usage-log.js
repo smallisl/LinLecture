@@ -20,7 +20,7 @@ const COLUMNS = [
   "translateSec", // 번역 시간(초)
   "koChars", // 한국어 글자 수
   "viChars", // 베트남어 글자 수
-  "status", // ok | empty | stt_error | translate_error
+  "status", // ok | empty | silence | filtered | stt_error | translate_error
   "error", // 오류 메시지
 ];
 

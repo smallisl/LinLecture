@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { TermList } from '@/components/term-list';
-import { loadLectures, summarize, type LectureRecord } from '@/lib/lectures';
+import { deleteLecture, loadLectures, summarize, type LectureRecord } from '@/lib/lectures';
 
 export default function HistoryScreen() {
   const [items, setItems] = useState<LectureRecord[]>([]);
@@ -27,6 +27,29 @@ export default function HistoryScreen() {
   }, []));
 
   const summary = useMemo(() => summarize(items), [items]);
+
+  // 강의 삭제: 확인 후 지우기 (되돌릴 수 없음)
+  const confirmDelete = (item: LectureRecord) => {
+    Alert.alert(
+      '강의 기록 삭제',
+      `${item.subject || '과목 미지정'} · ${dateText(item.startedAt)}\n이 기록을 삭제할까요? 되돌릴 수 없습니다.`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setItems(await deleteLecture(item.id));
+              setSelected(null);
+            } catch (e: any) {
+              Alert.alert('삭제 실패', e?.message || '기록을 삭제하지 못했습니다.');
+            }
+          },
+        },
+      ],
+    );
+  };
 
   const dateText = (value: string) => {
     const d = new Date(value);
@@ -87,6 +110,9 @@ export default function HistoryScreen() {
           <View style={styles.panel}><Text style={styles.body}>{selected.korean || '내용 없음'}</Text></View>
           <Text style={styles.section}>베트남어 번역</Text>
           <View style={styles.panel}><Text style={styles.body}>{selected.vietnamese || '내용 없음'}</Text></View>
+          <Pressable style={styles.deleteButton} onPress={() => confirmDelete(selected)}>
+            <Text style={styles.deleteText}>이 강의 기록 삭제</Text>
+          </Pressable>
         </ScrollView>
       ) : items.length === 0 ? (
         <Text style={styles.empty}>저장된 강의가 없습니다.</Text>
@@ -108,9 +134,9 @@ export default function HistoryScreen() {
               <Text style={styles.exportText}>📤 기록 내보내기 (JSON)</Text>
             </Pressable>
           </View>
-          <Text style={styles.count}>저장된 강의 {items.length}개</Text>
+          <Text style={styles.count}>저장된 강의 {items.length}개 · 길게 눌러 삭제</Text>
           {items.map(item => (
-            <Pressable key={item.id} style={styles.card} onPress={() => setSelected(item)}>
+            <Pressable key={item.id} style={styles.card} onPress={() => setSelected(item)} onLongPress={() => confirmDelete(item)}>
               <Text style={styles.subject}>{item.subject || '과목 미지정'}</Text>
               <Text style={styles.date}>{dateText(item.startedAt)}</Text>
               <Text numberOfLines={2} style={styles.preview}>{item.korean || '한국어 원문 없음'}</Text>
@@ -159,6 +185,8 @@ const styles = StyleSheet.create({
   body: { fontSize: 16, lineHeight: 26 },
   bookmarkPanel: { marginBottom: 10 },
   bookmarkVi: { fontWeight: '700', marginTop: 6 },
+  deleteButton: { marginTop: 28, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: '#E6B4B4', alignItems: 'center' },
+  deleteText: { color: '#B3261E', fontWeight: '700', fontSize: 15 },
   empty: { textAlign: 'center', marginTop: 80, color: '#888', fontSize: 16 },
   error: { color: '#d32f2f', marginTop: 24 },
 });

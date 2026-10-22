@@ -36,6 +36,13 @@ export async function loadLectures(): Promise<LectureRecord[]> {
   return data as LectureRecord[];
 }
 
+// 강의 하나를 지우고 남은 목록을 돌려준다. (서버의 usage.csv 기록은 그대로 남는다)
+export async function deleteLecture(id: string): Promise<LectureRecord[]> {
+  const remaining = (await loadLectures()).filter(item => item.id !== id);
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(remaining));
+  return remaining;
+}
+
 export async function addLecture(item: LectureRecord) {
   const previous = await loadLectures();
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([item, ...previous]));

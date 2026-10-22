@@ -12,8 +12,11 @@ export type LectureStats = {
   avgLatencySec: number; // 구간당 평균 응답 시간(인식+번역 왕복)
 };
 
-// 강의 화면에 카드로 표시되는 한 구간 (한국어 + 베트남어)
-export type Segment = { id: number; seconds: number; korean: string; vietnamese: string };
+// 전공 용어 (서버 glossary.js)
+export type Term = { ko: string; vi: string; en: string };
+
+// 강의 화면에 카드로 표시되는 한 구간 (한국어 + 베트남어 + 전공 용어)
+export type Segment = { id: number; seconds: number; korean: string; vietnamese: string; terms?: Term[] };
 
 export type LectureRecord = {
   id: string;

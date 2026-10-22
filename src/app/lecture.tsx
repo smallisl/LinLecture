@@ -5,8 +5,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { TermList } from '@/components/term-list';
 import { SERVER_URL } from '@/constants/config';
-import { addLecture, type LectureRecord, type Segment } from '@/lib/lectures';
+import { addLecture, type LectureRecord, type Segment, type Term } from '@/lib/lectures';
 
 const DEFAULT_SUBJECT = '임베디드시스템및실습';
 const SAMPLE_RATE = 16000;
@@ -151,7 +152,7 @@ export default function LectureScreen() {
       });
       const body = await response.text();
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${body}`);
-      const data: { text?: string; translation?: string } = JSON.parse(body);
+      const data: { text?: string; translation?: string; terms?: Term[] } = JSON.parse(body);
       statsRef.current.latencyMs += Date.now() - requestStartedAt;
       if (closedRef.current) return;
       if (data.text?.trim() || data.translation?.trim()) {
@@ -160,6 +161,7 @@ export default function LectureScreen() {
           seconds: Math.max(0, (chunk.number - 1) * CHUNK_SECONDS),
           korean: data.text?.trim() || '',
           vietnamese: data.translation?.trim() || '',
+          terms: data.terms ?? [],
         };
         segmentsRef.current = [...segmentsRef.current, segment];
         setSegments(segmentsRef.current);
@@ -407,6 +409,7 @@ export default function LectureScreen() {
             </View>
             <Text style={[styles.korean, { fontSize, lineHeight: fontSize * 1.55 }]}>{item.korean || '한국어 인식 결과 없음'}</Text>
             <Text style={[styles.vietnamese, { fontSize: fontSize + 1, lineHeight: (fontSize + 1) * 1.55 }]}>{item.vietnamese || '번역 대기 또는 번역 결과 없음'}</Text>
+            <TermList terms={item.terms} fontSize={Math.max(13, fontSize - 3)} />
           </View>
         ))}
         {(isStreaming || paused || busy) && (

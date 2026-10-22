@@ -2,6 +2,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
+import { TermList } from '@/components/term-list';
 import { loadLectures, summarize, type LectureRecord } from '@/lib/lectures';
 
 export default function HistoryScreen() {
@@ -77,6 +78,7 @@ export default function HistoryScreen() {
                   <Text style={styles.date}>{String(Math.floor(mark.seconds / 60)).padStart(2, '0')}:{String(mark.seconds % 60).padStart(2, '0')}</Text>
                   <Text style={styles.body}>{mark.korean}</Text>
                   <Text style={[styles.body, styles.bookmarkVi]}>{mark.vietnamese}</Text>
+                  <TermList terms={mark.terms} />
                 </View>
               ))}
             </>

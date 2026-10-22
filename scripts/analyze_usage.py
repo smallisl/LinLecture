@@ -70,6 +70,11 @@ def num(value, default=0.0):
         return default
 
 
+def local_time(iso):
+    """서버 기록(UTC)을 이 컴퓨터의 시간대로 바꾼다."""
+    return datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone()
+
+
 def finish(fig, ax, title, path):
     ax.set_title(title, loc="left", fontsize=14, fontweight="bold", color=INK, pad=12)
     ax.set_axisbelow(True)
@@ -97,13 +102,14 @@ def analyze_csv(path, out, lines):
     ok_rows = [r for r in rows if r.get("status") in ("ok", "translate_error")]
     whisper_avg = sum(num(r["whisperSec"]) for r in ok_rows) / max(len(ok_rows), 1)
     translate_avg = sum(num(r["translateSec"]) for r in ok_rows) / max(len(ok_rows), 1)
-    audio_avg = audio_total / len(rows)
-    slow = sum(1 for r in ok_rows if num(r["whisperSec"]) + num(r["translateSec"]) > num(r["audioSec"], audio_avg))
+    # 대표 구간 길이 = 가장 흔한 길이 (마지막 짧은 구간 때문에 평균은 낮게 나옴)
+    audio_avg = Counter(round(num(r.get("audioSec"))) for r in rows).most_common(1)[0][0] or audio_total / len(rows)
+    slow = sum(1 for r in ok_rows if num(r["whisperSec"]) + num(r["translateSec"]) > audio_avg)
 
     lines += [
         "## 서버 처리 기록 (usage.csv)",
         "",
-        f"- 기간: {rows[0]['timestamp'][:10]} ~ {rows[-1]['timestamp'][:10]}",
+        f"- 기간: {local_time(rows[0]['timestamp']):%Y-%m-%d %H:%M} ~ {local_time(rows[-1]['timestamp']):%Y-%m-%d %H:%M}",
         f"- 강의(세션) 수: {len(sessions)}",
         f"- 처리한 음성 구간: {len(rows)}개 (총 {audio_total / 60:.1f}분 분량)",
         f"- 한국어 인식 글자 수: {sum(int(num(r.get('koChars'))) for r in rows):,}자",
@@ -120,7 +126,7 @@ def analyze_csv(path, out, lines):
         if not good:
             continue
         first = srows[0]
-        stamp = datetime.fromisoformat(first["timestamp"].replace("Z", "+00:00")).astimezone()
+        stamp = local_time(first["timestamp"])
         labels.append(f"{stamp:%m/%d %H:%M}  {first.get('subject') or ''}"[:28])
         whisper.append(sum(num(r["whisperSec"]) for r in good) / len(good))
         translate.append(sum(num(r["translateSec"]) for r in good) / len(good))
@@ -137,8 +143,34 @@ def analyze_csv(path, out, lines):
         ax.set_xlim(0, max(audio_avg, max(w + t for w, t in zip(whisper, translate))) * 1.08)
         ax.set_xlabel("구간당 평균 처리 시간 (초)")
         ax.grid(axis="y", visible=False)
-        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=2, frameon=False)
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.3), ncol=2, frameon=False)
         finish(fig, ax, "강의별 평균 처리 시간", out / "latency_by_session.png")
+
+    # 1-2) 구간별 처리 시간 (평균에 가려지는 지연 구간을 보여 줌)
+    if ok_rows:
+        totals = [num(r["whisperSec"]) + num(r["translateSec"]) for r in ok_rows]
+        xs = list(range(1, len(totals) + 1))
+        late = [(x, t) for x, t in zip(xs, totals) if t > audio_avg]
+        fig, ax = plt.subplots(figsize=(9, 3.6))
+        ax.plot(xs, totals, color=BLUE, linewidth=2, marker="o", markersize=5, label="인식 + 번역 시간")
+        if late:
+            ax.scatter([x for x, _ in late], [t for _, t in late], s=70, color=STATUS["stt_error"], zorder=3,
+                       edgecolor=SURFACE, linewidth=2, label=f"실시간보다 늦음 ({len(late)}개)")
+        ax.axhline(audio_avg, color=INK_2, linestyle="--", linewidth=1.5, zorder=1,
+                   label=f"실시간 한계 (구간 길이 {audio_avg:.0f}초)")
+        # 강의(세션)가 바뀌는 곳에 옅은 세로선
+        prev = None
+        for x, r in zip(xs, ok_rows):
+            if prev is not None and r.get("sessionId") != prev:
+                ax.axvline(x - 0.5, color=GRID, linewidth=1.2)
+            prev = r.get("sessionId")
+        ax.set_xlabel("처리 순서 (구간)")
+        ax.set_ylabel("처리 시간 (초)")
+        ax.set_ylim(0, max(max(totals), audio_avg) * 1.15)
+        ax.grid(axis="x", visible=False)
+        ax.legend(loc="upper left", frameon=False, ncol=3, bbox_to_anchor=(0, 1.02))
+        ax.set_ylim(0, max(max(totals), audio_avg) * 1.3)
+        finish(fig, ax, "구간별 처리 시간", out / "latency_by_chunk.png")
 
     # 2) 구간 처리 결과
     order = [k for k in STATUS if status.get(k)]

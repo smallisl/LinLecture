@@ -7,6 +7,7 @@ export default function RootLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="lecture" />
       <Stack.Screen name="history" />
+      <Stack.Screen name="vocab" />
     </Stack>
   );
 }

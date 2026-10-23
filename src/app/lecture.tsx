@@ -7,7 +7,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 
 import { TermList } from '@/components/term-list';
 import { SERVER_URL } from '@/constants/config';
-import { addLecture, type LectureRecord, type Segment, type Term } from '@/lib/lectures';
+import { addLecture, collectTerms, type LectureRecord, type Segment, type Term } from '@/lib/lectures';
 
 const DEFAULT_SUBJECT = '임베디드시스템및실습';
 const SAMPLE_RATE = 16000;
@@ -96,6 +96,7 @@ export default function LectureScreen() {
         korean,
         vietnamese,
         bookmarks: segmentsRef.current.filter(segment => bookmarksRef.current.includes(segment.id)),
+        terms: collectTerms(segmentsRef.current),
         stats: {
           durationSec: elapsedRef.current, // 일시정지 시간을 뺀 실제 녹음 시간
           chunksSent: stats.sent,

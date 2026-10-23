@@ -1,15 +1,16 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { TermList } from '@/components/term-list';
-import { deleteLecture, loadLectures, summarize, type LectureRecord } from '@/lib/lectures';
+import { deleteLecture, loadLectures, searchLectures, summarize, type LectureRecord } from '@/lib/lectures';
 
 export default function HistoryScreen() {
   const [items, setItems] = useState<LectureRecord[]>([]);
   const [selected, setSelected] = useState<LectureRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [query, setQuery] = useState('');
 
   useFocusEffect(useCallback(() => {
     let active = true;
@@ -27,6 +28,7 @@ export default function HistoryScreen() {
   }, []));
 
   const summary = useMemo(() => summarize(items), [items]);
+  const results = useMemo(() => searchLectures(items, query), [items, query]);
 
   // 강의 삭제: 확인 후 지우기 (되돌릴 수 없음)
   const confirmDelete = (item: LectureRecord) => {
@@ -106,6 +108,12 @@ export default function HistoryScreen() {
               ))}
             </>
           )}
+          {!!selected.terms?.length && (
+            <>
+              <Text style={styles.section}>이 강의의 전공 용어 {selected.terms.length}개</Text>
+              <View style={styles.panel}><TermList terms={selected.terms} /></View>
+            </>
+          )}
           <Text style={styles.section}>한국어 원문</Text>
           <View style={styles.panel}><Text style={styles.body}>{selected.korean || '내용 없음'}</Text></View>
           <Text style={styles.section}>베트남어 번역</Text>
@@ -134,12 +142,25 @@ export default function HistoryScreen() {
               <Text style={styles.exportText}>📤 기록 내보내기 (JSON)</Text>
             </Pressable>
           </View>
-          <Text style={styles.count}>저장된 강의 {items.length}개 · 길게 눌러 삭제</Text>
-          {items.map(item => (
+          <TextInput
+            style={styles.search}
+            value={query}
+            onChangeText={setQuery}
+            placeholder="🔍 강의 내용 검색 (예: 인터럽트)"
+            placeholderTextColor="#999"
+            clearButtonMode="while-editing"
+            autoCorrect={false}
+            returnKeyType="search"
+          />
+          <Text style={styles.count}>
+            {query.trim() ? `검색 결과 ${results.length}개` : `저장된 강의 ${items.length}개 · 길게 눌러 삭제`}
+          </Text>
+          {query.trim() && results.length === 0 && <Text style={styles.noResult}>'{query.trim()}'이(가) 들어간 강의가 없습니다.</Text>}
+          {results.map(({ item, snippet }) => (
             <Pressable key={item.id} style={styles.card} onPress={() => setSelected(item)} onLongPress={() => confirmDelete(item)}>
               <Text style={styles.subject}>{item.subject || '과목 미지정'}</Text>
               <Text style={styles.date}>{dateText(item.startedAt)}</Text>
-              <Text numberOfLines={2} style={styles.preview}>{item.korean || '한국어 원문 없음'}</Text>
+              <Text numberOfLines={2} style={styles.preview}>{snippet || item.korean || '한국어 원문 없음'}</Text>
               <Text style={styles.more}>자세히 보기 ›</Text>
             </Pressable>
           ))}
@@ -174,6 +195,8 @@ const styles = StyleSheet.create({
   exportButton: { marginTop: 12, backgroundColor: '#222', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   exportText: { color: '#fff', fontWeight: '700' },
   count: { color: '#777', marginBottom: 14 },
+  search: { borderWidth: 1, borderColor: '#ddd', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: '#111', marginBottom: 12 },
+  noResult: { color: '#888', textAlign: 'center', marginTop: 20 },
   card: { padding: 18, borderRadius: 14, backgroundColor: '#f4f4f4', marginBottom: 14 },
   subject: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
   date: { color: '#777', fontSize: 13, marginBottom: 10 },

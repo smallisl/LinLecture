@@ -26,6 +26,7 @@ export type LectureRecord = {
   korean: string;
   vietnamese: string;
   bookmarks?: Segment[]; // 강의 중 ♥ 표시한 구간
+  terms?: (Term & { count: number })[]; // 이 강의에 나온 전공 용어와 횟수 (단어장용)
   stats?: LectureStats;
 };
 
@@ -46,6 +47,59 @@ export async function deleteLecture(id: string): Promise<LectureRecord[]> {
 export async function addLecture(item: LectureRecord) {
   const previous = await loadLectures();
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([item, ...previous]));
+}
+
+// 구간들에 나온 전공 용어를 합쳐 횟수와 함께 돌려준다.
+export function collectTerms(segments: Segment[]): (Term & { count: number })[] {
+  const map = new Map<string, Term & { count: number }>();
+  for (const segment of segments) {
+    for (const term of segment.terms ?? []) {
+      const entry = map.get(term.ko);
+      if (entry) entry.count += 1;
+      else map.set(term.ko, { ...term, count: 1 });
+    }
+  }
+  return [...map.values()].sort((a, b) => b.count - a.count);
+}
+
+// 단어장: 모든 강의의 전공 용어를 하나로 모은다.
+export type VocabEntry = Term & { count: number; lectures: number; subjects: string[]; lastSeen: string };
+
+export function buildVocab(items: LectureRecord[]): VocabEntry[] {
+  const map = new Map<string, VocabEntry>();
+  for (const item of items) {
+    for (const term of item.terms ?? []) {
+      const subject = item.subject || '과목 미지정';
+      const entry = map.get(term.ko);
+      if (!entry) {
+        map.set(term.ko, { ko: term.ko, vi: term.vi, en: term.en, count: term.count, lectures: 1, subjects: [subject], lastSeen: item.startedAt });
+        continue;
+      }
+      entry.count += term.count;
+      entry.lectures += 1;
+      if (!entry.subjects.includes(subject)) entry.subjects.push(subject);
+      if (item.startedAt > entry.lastSeen) entry.lastSeen = item.startedAt;
+    }
+  }
+  return [...map.values()].sort((a, b) => b.count - a.count || a.ko.localeCompare(b.ko, 'ko'));
+}
+
+// 검색: 과목, 원문, 번역에 검색어가 들어 있는 강의와, 원문에서 찾은 부분의 앞뒤 문장 조각
+export function searchLectures(items: LectureRecord[], query: string) {
+  const q = query.trim().toLowerCase();
+  if (!q) return items.map(item => ({ item, snippet: '' }));
+  const result: { item: LectureRecord; snippet: string }[] = [];
+  for (const item of items) {
+    const fields = [item.korean ?? '', item.vietnamese ?? '', item.subject ?? ''];
+    const hit = fields.find(text => text.toLowerCase().includes(q));
+    if (hit === undefined) continue;
+    const index = hit.toLowerCase().indexOf(q);
+    const start = Math.max(0, index - 20);
+    const end = Math.min(hit.length, index + q.length + 30);
+    const snippet = (start > 0 ? '…' : '') + hit.slice(start, end).replace(/\s+/g, ' ') + (end < hit.length ? '…' : '');
+    result.push({ item, snippet });
+  }
+  return result;
 }
 
 const durationOf = (item: LectureRecord) => {

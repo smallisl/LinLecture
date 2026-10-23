@@ -8,6 +8,8 @@ export default function RootLayout() {
       <Stack.Screen name="lecture" />
       <Stack.Screen name="history" />
       <Stack.Screen name="vocab" />
+      <Stack.Screen name="bookmarks" />
+      <Stack.Screen name="quiz" />
     </Stack>
   );
 }

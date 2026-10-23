@@ -72,9 +72,14 @@ export default function VocabScreen() {
           </ScrollView>
           <View style={styles.toolbar}>
             <Text style={styles.count}>용어 {vocab.length}개</Text>
-            <Pressable onPress={() => { setHideMeaning(v => !v); setRevealed([]); }} style={styles.toggle}>
-              <Text style={styles.toggleText}>{hideMeaning ? '뜻 모두 보기' : '뜻 가리기 (암기)'}</Text>
-            </Pressable>
+            <View style={styles.tools}>
+              <Pressable onPress={() => { setHideMeaning(v => !v); setRevealed([]); }} style={styles.toggle}>
+                <Text style={styles.toggleText}>{hideMeaning ? '뜻 보기' : '뜻 가리기'}</Text>
+              </Pressable>
+              <Pressable onPress={() => router.push('/quiz')} style={[styles.toggle, styles.quiz]}>
+                <Text style={[styles.toggleText, styles.quizText]}>🧠 퀴즈</Text>
+              </Pressable>
+            </View>
           </View>
 
           {vocab.length === 0 ? (
@@ -129,6 +134,9 @@ const styles = StyleSheet.create({
   count: { color: '#777' },
   toggle: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10, borderWidth: 1, borderColor: '#ccc' },
   toggleText: { fontSize: 13, fontWeight: '600', color: '#333' },
+  tools: { flexDirection: 'row', gap: 8 },
+  quiz: { backgroundColor: '#222', borderColor: '#222' },
+  quizText: { color: '#fff' },
   list: { paddingBottom: 48, gap: 12 },
   card: { padding: 16, borderRadius: 14, backgroundColor: '#f4f4f4' },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },

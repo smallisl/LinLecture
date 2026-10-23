@@ -7,6 +7,8 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 
 import { TermList } from '@/components/term-list';
 import { SERVER_URL } from '@/constants/config';
+import { checkServer, SERVER_HELP } from '@/lib/server';
+import { loadViewMode, nextViewMode, saveViewMode, VIEW_LABEL, type ViewMode } from '@/lib/view-mode';
 import { addLecture, collectTerms, type LectureRecord, type Segment, type Term } from '@/lib/lectures';
 
 const DEFAULT_SUBJECT = '임베디드시스템및실습';
@@ -22,6 +24,13 @@ export default function LectureScreen() {
 
   const [segments, setSegments] = useState<Segment[]>([]);
   const [fontSize, setFontSize] = useState(17);
+  const [viewMode, setViewMode] = useState<ViewMode>('both');
+  useEffect(() => { void loadViewMode().then(setViewMode); }, []);
+  const changeViewMode = () => {
+    const next = nextViewMode(viewMode);
+    setViewMode(next);
+    void saveViewMode(next);
+  };
   const [paused, setPaused] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [bookmarks, setBookmarks] = useState<number[]>([]);
@@ -97,6 +106,7 @@ export default function LectureScreen() {
         vietnamese,
         bookmarks: segmentsRef.current.filter(segment => bookmarksRef.current.includes(segment.id)),
         terms: collectTerms(segmentsRef.current),
+        segments: segmentsRef.current,
         stats: {
           durationSec: elapsedRef.current, // 일시정지 시간을 뺀 실제 녹음 시간
           chunksSent: stats.sent,
@@ -243,6 +253,20 @@ export default function LectureScreen() {
     if (sendingRef.current || savingRef.current || stopPendingRef.current || stopping) return;
     try {
       setErrorMessage('');
+      // 녹음 전에 서버 연결 확인 → 연결이 안 되면 이유와 해결 방법을 먼저 보여 준다.
+      setStatusMessage('서버 연결 확인 중');
+      const server = await checkServer();
+      if (!server.ok) {
+        const goOn = await new Promise<boolean>(resolve => Alert.alert(
+          server.message,
+          `녹음해도 글자가 나오지 않을 수 있습니다.\n\n${SERVER_HELP}`,
+          [
+            { text: '취소', style: 'cancel', onPress: () => resolve(false) },
+            { text: '그래도 녹음', onPress: () => resolve(true) },
+          ],
+        ));
+        if (!goOn) { setStatusMessage('강의 시작 준비 완료'); return; }
+      }
       const permission = await requestRecordingPermissionsAsync();
       if (!permission.granted) {
         Alert.alert('권한 필요', '마이크 사용 권한이 필요합니다.');
@@ -375,7 +399,9 @@ export default function LectureScreen() {
           <Text style={styles.headerTitle} numberOfLines={1}>{selectedSubject} · {titleDate}</Text>
           <Text style={styles.language}>KO → VI</Text>
         </View>
-        <View style={styles.headerSpacer} />
+        <Pressable onPress={changeViewMode} style={styles.modeButton} accessibilityLabel="보기 방식 바꾸기">
+          <Text style={styles.modeText}>{VIEW_LABEL[viewMode]}</Text>
+        </Pressable>
       </View>
 
       <View style={styles.toolbar}>
@@ -408,8 +434,8 @@ export default function LectureScreen() {
                 <Text style={[styles.bookmark, bookmarks.includes(item.id) && styles.bookmarkActive]}>{bookmarks.includes(item.id) ? '♥' : '♡'}</Text>
               </Pressable>
             </View>
-            <Text style={[styles.korean, { fontSize, lineHeight: fontSize * 1.55 }]}>{item.korean || '한국어 인식 결과 없음'}</Text>
-            <Text style={[styles.vietnamese, { fontSize: fontSize + 1, lineHeight: (fontSize + 1) * 1.55 }]}>{item.vietnamese || '번역 대기 또는 번역 결과 없음'}</Text>
+            {viewMode !== 'vi' && <Text style={[styles.korean, { fontSize, lineHeight: fontSize * 1.55 }]}>{item.korean || '한국어 인식 결과 없음'}</Text>}
+            {viewMode !== 'ko' && <Text style={[styles.vietnamese, { fontSize: fontSize + 1, lineHeight: (fontSize + 1) * 1.55 }]}>{item.vietnamese || '번역 대기 또는 번역 결과 없음'}</Text>}
             <TermList terms={item.terms} fontSize={Math.max(13, fontSize - 3)} />
           </View>
         ))}
@@ -459,6 +485,8 @@ const styles = StyleSheet.create({
   headerTitle: { color: BLUE, fontWeight: '800', fontSize: 15 },
   language: { color: '#7251C4', fontWeight: '800', fontSize: 17, marginTop: 5 },
   headerSpacer: { width: 44 },
+  modeButton: { minWidth: 44, height: 44, paddingHorizontal: 6, backgroundColor: '#FFFFFF', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  modeText: { color: BLUE, fontWeight: '800', fontSize: 12 },
   toolbar: { paddingHorizontal: 18, paddingVertical: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   timerGroup: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 },
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#A4B1C4', marginRight: 5 },

@@ -27,6 +27,9 @@ export type LectureRecord = {
   vietnamese: string;
   bookmarks?: Segment[]; // 강의 중 ♥ 표시한 구간
   terms?: (Term & { count: number })[]; // 이 강의에 나온 전공 용어와 횟수 (단어장용)
+  segments?: Segment[]; // 모든 카드 (원문·번역을 짝지어 다시 보기)
+  title?: string; // 사용자가 붙인 강의 제목 (예: 3주차 인터럽트)
+  memo?: string; // 사용자 메모
   stats?: LectureStats;
 };
 
@@ -42,6 +45,48 @@ export async function deleteLecture(id: string): Promise<LectureRecord[]> {
   const remaining = (await loadLectures()).filter(item => item.id !== id);
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(remaining));
   return remaining;
+}
+
+// 제목·메모 등 일부만 바꿔 저장하고 바뀐 목록을 돌려준다.
+export async function updateLecture(id: string, patch: Partial<Pick<LectureRecord, 'title' | 'memo'>>): Promise<LectureRecord[]> {
+  const list = (await loadLectures()).map(item => item.id === id ? { ...item, ...patch } : item);
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  return list;
+}
+
+export const formatClock = (seconds: number) =>
+  `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+
+// 강의 노트(텍스트): 메모장, 카카오톡, 메일로 보내거나 인쇄해서 복습용으로 쓴다.
+export function lectureNotesText(item: LectureRecord): string {
+  const d = new Date(item.startedAt);
+  const date = Number.isNaN(d.getTime()) ? '' : d.toLocaleString('ko-KR');
+  const out: string[] = [];
+  out.push(`[LinLecture 강의 노트] ${item.title || item.subject || '강의'}`);
+  out.push(`${item.subject || '과목 미지정'} · ${date}${item.stats ? ` · ${Math.round(item.stats.durationSec / 60)}분` : ''}`);
+  if (item.memo?.trim()) out.push('', '■ 메모', item.memo.trim());
+  if (item.bookmarks?.length) {
+    out.push('', `■ 북마크 (${item.bookmarks.length})`);
+    for (const b of item.bookmarks) out.push(`[${formatClock(b.seconds)}] ${b.korean}`, `   → ${b.vietnamese}`);
+  }
+  if (item.terms?.length) {
+    out.push('', `■ 전공 용어 (${item.terms.length})`);
+    for (const t of item.terms) out.push(`${t.ko} → ${t.vi}${t.en && t.en !== t.vi ? ` (${t.en})` : ''}`);
+  }
+  out.push('', '■ 강의 내용');
+  if (item.segments?.length) {
+    for (const s of item.segments) out.push(`[${formatClock(s.seconds)}] ${s.korean}`, `   → ${s.vietnamese}`);
+  } else {
+    out.push(item.korean || '(원문 없음)', '', item.vietnamese || '(번역 없음)');
+  }
+  return out.join('\n');
+}
+
+// 모든 강의의 북마크를 최신 강의부터 모은다.
+export function allBookmarks(items: LectureRecord[]) {
+  return items
+    .filter(item => item.bookmarks?.length)
+    .map(item => ({ item, marks: item.bookmarks! }));
 }
 
 export async function addLecture(item: LectureRecord) {
@@ -90,7 +135,7 @@ export function searchLectures(items: LectureRecord[], query: string) {
   if (!q) return items.map(item => ({ item, snippet: '' }));
   const result: { item: LectureRecord; snippet: string }[] = [];
   for (const item of items) {
-    const fields = [item.korean ?? '', item.vietnamese ?? '', item.subject ?? ''];
+    const fields = [item.title ?? '', item.memo ?? '', item.korean ?? '', item.vietnamese ?? '', item.subject ?? ''];
     const hit = fields.find(text => text.toLowerCase().includes(q));
     if (hit === undefined) continue;
     const index = hit.toLowerCase().indexOf(q);
@@ -144,4 +189,24 @@ export function summarize(items: LectureRecord[]): UsageSummary {
       .map(([subject, v]) => ({ subject, ...v }))
       .sort((a, b) => b.count - a.count),
   };
+}
+
+// 단어장 퀴즈: 한국어 용어를 보고 베트남어 뜻 4개 중 하나를 고른다.
+export type QuizQuestion = { ko: string; en: string; answer: string; choices: string[] };
+
+export function makeQuiz(vocab: VocabEntry[], count = 10, random: () => number = Math.random): QuizQuestion[] {
+  const meanings = [...new Set(vocab.map(v => v.vi))];
+  if (meanings.length < 4) return [];
+  const shuffle = <T,>(list: T[]) => {
+    const a = [...list];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  return shuffle(vocab).slice(0, Math.min(count, vocab.length)).map(v => {
+    const wrong = shuffle(meanings.filter(m => m !== v.vi)).slice(0, 3);
+    return { ko: v.ko, en: v.en, answer: v.vi, choices: shuffle([v.vi, ...wrong]) };
+  });
 }

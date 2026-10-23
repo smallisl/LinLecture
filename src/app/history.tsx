@@ -2,8 +2,8 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { TermList } from '@/components/term-list';
-import { deleteLecture, loadLectures, searchLectures, summarize, type LectureRecord } from '@/lib/lectures';
+import { LectureDetail } from '@/components/lecture-detail';
+import { deleteLecture, loadLectures, searchLectures, summarize, updateLecture, type LectureRecord } from '@/lib/lectures';
 
 export default function HistoryScreen() {
   const [items, setItems] = useState<LectureRecord[]>([]);
@@ -85,43 +85,19 @@ export default function HistoryScreen() {
         <Text style={styles.title}>{selected ? '강의 상세 내용' : '이전 강의 기록'}</Text>
       </View>
       {loading ? <ActivityIndicator size="large" /> : error ? <Text style={styles.error}>{error}</Text> : selected ? (
-        <ScrollView contentContainerStyle={styles.content}>
-          <Text style={styles.subject}>{selected.subject || '과목 미지정'}</Text>
-          <Text style={styles.date}>{dateText(selected.startedAt)}</Text>
-          {selected.stats && (
-            <Text style={styles.statsLine}>
-              {Math.round(selected.stats.durationSec / 60)}분 · 구간 {selected.stats.chunksSent}개
-              (인식 {selected.stats.chunksRecognized}, 실패 {selected.stats.chunkErrors}) ·
-              평균 응답 {selected.stats.avgLatencySec}초
-            </Text>
-          )}
-          {!!selected.bookmarks?.length && (
-            <>
-              <Text style={styles.section}>♥ 북마크 {selected.bookmarks.length}개</Text>
-              {selected.bookmarks.map(mark => (
-                <View key={mark.id} style={[styles.panel, styles.bookmarkPanel]}>
-                  <Text style={styles.date}>{String(Math.floor(mark.seconds / 60)).padStart(2, '0')}:{String(mark.seconds % 60).padStart(2, '0')}</Text>
-                  <Text style={styles.body}>{mark.korean}</Text>
-                  <Text style={[styles.body, styles.bookmarkVi]}>{mark.vietnamese}</Text>
-                  <TermList terms={mark.terms} />
-                </View>
-              ))}
-            </>
-          )}
-          {!!selected.terms?.length && (
-            <>
-              <Text style={styles.section}>이 강의의 전공 용어 {selected.terms.length}개</Text>
-              <View style={styles.panel}><TermList terms={selected.terms} /></View>
-            </>
-          )}
-          <Text style={styles.section}>한국어 원문</Text>
-          <View style={styles.panel}><Text style={styles.body}>{selected.korean || '내용 없음'}</Text></View>
-          <Text style={styles.section}>베트남어 번역</Text>
-          <View style={styles.panel}><Text style={styles.body}>{selected.vietnamese || '내용 없음'}</Text></View>
-          <Pressable style={styles.deleteButton} onPress={() => confirmDelete(selected)}>
-            <Text style={styles.deleteText}>이 강의 기록 삭제</Text>
-          </Pressable>
-        </ScrollView>
+        <LectureDetail
+          item={selected}
+          onSave={async patch => {
+            try {
+              const list = await updateLecture(selected.id, patch);
+              setItems(list);
+              setSelected(current => current && current.id === selected.id ? list.find(i => i.id === selected.id) ?? current : current);
+            } catch (e: any) {
+              Alert.alert('저장 실패', e?.message || '제목·메모를 저장하지 못했습니다.');
+            }
+          }}
+          onDelete={() => confirmDelete(selected)}
+        />
       ) : items.length === 0 ? (
         <Text style={styles.empty}>저장된 강의가 없습니다.</Text>
       ) : (
@@ -158,8 +134,8 @@ export default function HistoryScreen() {
           {query.trim() && results.length === 0 && <Text style={styles.noResult}>'{query.trim()}'이(가) 들어간 강의가 없습니다.</Text>}
           {results.map(({ item, snippet }) => (
             <Pressable key={item.id} style={styles.card} onPress={() => setSelected(item)} onLongPress={() => confirmDelete(item)}>
-              <Text style={styles.subject}>{item.subject || '과목 미지정'}</Text>
-              <Text style={styles.date}>{dateText(item.startedAt)}</Text>
+              <Text style={styles.subject}>{item.title || item.subject || '과목 미지정'}</Text>
+              <Text style={styles.date}>{item.title ? `${item.subject} · ` : ''}{dateText(item.startedAt)}{item.bookmarks?.length ? ` · ♥ ${item.bookmarks.length}` : ''}</Text>
               <Text numberOfLines={2} style={styles.preview}>{snippet || item.korean || '한국어 원문 없음'}</Text>
               <Text style={styles.more}>자세히 보기 ›</Text>
             </Pressable>

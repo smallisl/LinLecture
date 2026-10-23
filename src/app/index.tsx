@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import { checkServer, SERVER_HELP, serverHost, type ServerStatus } from '@/lib/server';
 import { addSubject, DEFAULT_SUBJECTS, loadSubjects, removeSubject } from '@/lib/subjects';
 
 export default function HomeScreen() {
@@ -20,6 +21,17 @@ export default function HomeScreen() {
 
   const [showSubjects, setShowSubjects] = useState(false);
   const [newSubject, setNewSubject] = useState('');
+  const [server, setServer] = useState<ServerStatus | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  const refreshServer = useCallback(async () => {
+    setChecking(true);
+    setServer(await checkServer());
+    setChecking(false);
+  }, []);
+
+  // 홈 화면에 올 때마다 서버 연결 확인
+  useFocusEffect(useCallback(() => { void refreshServer(); }, [refreshServer]));
 
   // 저장된 과목 목록 불러오기
   useFocusEffect(useCallback(() => {
@@ -98,6 +110,25 @@ export default function HomeScreen() {
         외국인 유학생의 강의 이해와 복습을 도와드립니다.
       </Text>
 
+      <Pressable
+        style={[styles.serverBox, server && !server.ok && styles.serverBoxBad]}
+        onPress={() => server && !server.ok ? Alert.alert('서버 연결 확인 방법', SERVER_HELP) : void refreshServer()}
+      >
+        <Text style={styles.serverText}>
+          {checking || !server ? '⏳ 서버 확인 중…'
+            : server.ok ? `🟢 서버 연결됨 · ${server.ms}ms`
+            : `🔴 ${server.message}`}
+        </Text>
+        <Text style={styles.serverSub}>
+          {server && !server.ok ? '눌러서 해결 방법 보기' : serverHost()}
+        </Text>
+        {server && !server.ok && (
+          <Pressable onPress={() => void refreshServer()} style={styles.retry}>
+            <Text style={styles.retryText}>다시 확인</Text>
+          </Pressable>
+        )}
+      </Pressable>
+
       <Text style={styles.label}>과목 선택</Text>
 
       <Pressable
@@ -164,14 +195,24 @@ export default function HomeScreen() {
         </Text>
       </Pressable>
 
-      <Pressable
-        style={styles.historyButton}
-        onPress={() => router.push('/vocab')}
-      >
-        <Text style={styles.historyButtonText}>
-          📘 전공 단어장
-        </Text>
-      </Pressable>
+      <View style={styles.row}>
+        <Pressable
+          style={[styles.historyButton, styles.half]}
+          onPress={() => router.push('/vocab')}
+        >
+          <Text style={styles.historyButtonText}>
+            📘 전공 단어장
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.historyButton, styles.half]}
+          onPress={() => router.push('/bookmarks')}
+        >
+          <Text style={styles.historyButtonText}>
+            ♥ 북마크 모아보기
+          </Text>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -206,7 +247,7 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 16,
     marginTop: 30,
-    marginBottom: 40,
+    marginBottom: 16,
     textAlign: 'center',
     lineHeight: 24,
     color: '#555555',
@@ -256,6 +297,53 @@ const styles = StyleSheet.create({
 
   subjectItemText: {
     fontSize: 15,
+  },
+
+  serverBox: {
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 24,
+    backgroundColor: '#eef7f0',
+  },
+
+  serverBoxBad: {
+    backgroundColor: '#fff1f0',
+  },
+
+  serverText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#222222',
+  },
+
+  serverSub: {
+    fontSize: 12,
+    color: '#777777',
+    marginTop: 4,
+  },
+
+  retry: {
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#222222',
+  },
+
+  retryText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+
+  half: {
+    flex: 1,
   },
 
   subjectItemSelected: {

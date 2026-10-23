@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { buildVocab, loadLectures, type LectureRecord } from '@/lib/lectures';
+import { C } from '@/constants/theme';
 
 const ALL = '전체';
 
@@ -59,7 +60,7 @@ export default function VocabScreen() {
             value={query}
             onChangeText={setQuery}
             placeholder="용어 검색 (한국어 · 베트남어 · 영어)"
-            placeholderTextColor="#999"
+            placeholderTextColor={C.mute}
             clearButtonMode="while-editing"
             autoCorrect={false}
           />
@@ -77,7 +78,7 @@ export default function VocabScreen() {
                 <Text style={styles.toggleText}>{hideMeaning ? '뜻 보기' : '뜻 가리기'}</Text>
               </Pressable>
               <Pressable onPress={() => router.push('/quiz')} style={[styles.toggle, styles.quiz]}>
-                <Text style={[styles.toggleText, styles.quizText]}>🧠 퀴즈</Text>
+                <Text style={[styles.toggleText, styles.quizText]}>퀴즈</Text>
               </Pressable>
             </View>
           </View>
@@ -119,33 +120,33 @@ export default function VocabScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingTop: 60, paddingHorizontal: 24 },
+  container: { flex: 1, backgroundColor: C.paper, paddingTop: 60, paddingHorizontal: 24 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 18, gap: 18 },
-  back: { fontSize: 17, color: '#333' },
+  back: { fontSize: 17, color: C.ink2 },
   title: { fontSize: 22, fontWeight: '700' },
-  search: { borderWidth: 1, borderColor: '#ddd', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: '#111' },
+  search: { borderWidth: 1, borderColor: C.line, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: C.ink },
   chips: { flexGrow: 0, marginTop: 12 },
   chipsContent: { gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, backgroundColor: '#f1f1f1' },
-  chipOn: { backgroundColor: '#222' },
-  chipText: { fontSize: 14, color: '#444' },
-  chipTextOn: { color: '#fff', fontWeight: '700' },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, backgroundColor: C.khakiSoft },
+  chipOn: { backgroundColor: C.ink },
+  chipText: { fontSize: 14, color: C.ink2 },
+  chipTextOn: { color: C.paper, fontWeight: '700' },
   toolbar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, marginBottom: 8 },
-  count: { color: '#777' },
-  toggle: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10, borderWidth: 1, borderColor: '#ccc' },
-  toggleText: { fontSize: 13, fontWeight: '600', color: '#333' },
+  count: { color: C.mute },
+  toggle: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 10, borderWidth: 1, borderColor: C.line },
+  toggleText: { fontSize: 13, fontWeight: '600', color: C.ink2 },
   tools: { flexDirection: 'row', gap: 8 },
-  quiz: { backgroundColor: '#222', borderColor: '#222' },
-  quizText: { color: '#fff' },
+  quiz: { backgroundColor: C.ink, borderColor: C.ink },
+  quizText: { color: C.paper },
   list: { paddingBottom: 48, gap: 12 },
-  card: { padding: 16, borderRadius: 14, backgroundColor: '#f4f4f4' },
+  card: { padding: 16, borderRadius: 14, backgroundColor: C.card },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  ko: { fontSize: 19, fontWeight: '700', color: '#111', flexShrink: 1 },
-  badge: { fontSize: 12, color: '#555', backgroundColor: '#e4e4e4', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, overflow: 'hidden' },
-  vi: { fontSize: 17, fontWeight: '600', color: '#183B73' },
-  en: { fontSize: 14, color: '#666', marginTop: 2 },
-  hidden: { fontSize: 15, color: '#999', fontStyle: 'italic' },
-  meta: { fontSize: 12, color: '#888', marginTop: 8 },
-  empty: { textAlign: 'center', marginTop: 60, color: '#888', fontSize: 15, lineHeight: 23 },
-  error: { color: '#d32f2f', marginTop: 24 },
+  ko: { fontSize: 19, fontWeight: '700', color: C.ink, flexShrink: 1 },
+  badge: { fontSize: 12, color: C.ink2, backgroundColor: C.khakiSoft, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, overflow: 'hidden' },
+  vi: { fontSize: 17, fontWeight: '600', color: C.ink },
+  en: { fontSize: 14, color: C.ink2, marginTop: 2 },
+  hidden: { fontSize: 15, color: C.mute, fontStyle: 'italic' },
+  meta: { fontSize: 12, color: C.mute, marginTop: 8 },
+  empty: { textAlign: 'center', marginTop: 60, color: C.mute, fontSize: 15, lineHeight: 23 },
+  error: { color: C.seal, marginTop: 24 },
 });

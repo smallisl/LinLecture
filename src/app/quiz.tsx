@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { buildVocab, loadLectures, makeQuiz, type QuizQuestion } from '@/lib/lectures';
+import { C } from '@/constants/theme';
 
 // 전공 용어 퀴즈: 강의에서 모은 용어로 4지선다 10문제
 export default function QuizScreen() {
@@ -56,7 +57,7 @@ export default function QuizScreen() {
       ) : done ? (
         <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
           <Text style={styles.result}>{score} / {questions.length}</Text>
-          <Text style={styles.resultSub}>{score === questions.length ? '모두 맞았습니다! 🎉' : '틀린 용어를 다시 확인해 보세요.'}</Text>
+          <Text style={styles.resultSub}>{score === questions.length ? '모두 맞았습니다!' : '틀린 용어를 다시 확인해 보세요.'}</Text>
           {wrong.map(w => (
             <View key={w.ko} style={styles.wrongCard}>
               <Text style={styles.wrongKo}>{w.ko}</Text>
@@ -103,25 +104,25 @@ export default function QuizScreen() {
 
 const choiceBase = { padding: 16, borderRadius: 12, borderWidth: 1, marginBottom: 10 } as const;
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingTop: 60, paddingHorizontal: 24 },
+  container: { flex: 1, backgroundColor: C.paper, paddingTop: 60, paddingHorizontal: 24 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, gap: 18 },
-  back: { fontSize: 17, color: '#333' },
+  back: { fontSize: 17, color: C.ink2 },
   title: { fontSize: 22, fontWeight: '700' },
-  progress: { color: '#777', marginBottom: 12 },
-  questionCard: { backgroundColor: '#f4f4f4', borderRadius: 16, padding: 22, marginBottom: 18, alignItems: 'center' },
-  questionLabel: { color: '#777', fontSize: 14, marginBottom: 10 },
-  questionKo: { fontSize: 28, fontWeight: '800', color: '#111', textAlign: 'center' },
-  choice: { ...choiceBase, borderColor: '#ddd', backgroundColor: '#fff' },
-  choiceRight: { ...choiceBase, borderColor: '#2E7D4F', backgroundColor: '#E8F5EC' },
-  choiceWrong: { ...choiceBase, borderColor: '#C62828', backgroundColor: '#FDECEA' },
-  choiceText: { fontSize: 16, color: '#111' },
-  feedback: { fontSize: 15, fontWeight: '700', color: '#333', marginTop: 6, marginBottom: 12 },
-  primary: { backgroundColor: '#222', borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 8 },
-  primaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  progress: { color: C.mute, marginBottom: 12 },
+  questionCard: { backgroundColor: C.card, borderRadius: 16, padding: 22, marginBottom: 18, alignItems: 'center' },
+  questionLabel: { color: C.mute, fontSize: 14, marginBottom: 10 },
+  questionKo: { fontSize: 28, fontWeight: '800', color: C.ink, textAlign: 'center' },
+  choice: { ...choiceBase, borderColor: C.line, backgroundColor: C.paper },
+  choiceRight: { ...choiceBase, borderColor: C.ok, backgroundColor: C.okSoft },
+  choiceWrong: { ...choiceBase, borderColor: C.seal, backgroundColor: C.sealSoft },
+  choiceText: { fontSize: 16, color: C.ink },
+  feedback: { fontSize: 15, fontWeight: '700', color: C.ink2, marginTop: 6, marginBottom: 12 },
+  primary: { backgroundColor: C.ink, borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 8 },
+  primaryText: { color: C.paper, fontSize: 16, fontWeight: '700' },
   result: { fontSize: 44, fontWeight: '800', textAlign: 'center', marginTop: 20 },
-  resultSub: { fontSize: 16, color: '#555', textAlign: 'center', marginTop: 8, marginBottom: 20 },
-  wrongCard: { backgroundColor: '#FDECEA', borderRadius: 12, padding: 14, marginBottom: 8 },
+  resultSub: { fontSize: 16, color: C.ink2, textAlign: 'center', marginTop: 8, marginBottom: 20 },
+  wrongCard: { backgroundColor: C.sealSoft, borderRadius: 12, padding: 14, marginBottom: 8 },
   wrongKo: { fontSize: 16, fontWeight: '700' },
-  wrongVi: { fontSize: 15, color: '#183B73', marginTop: 4 },
-  empty: { textAlign: 'center', marginTop: 60, color: '#888', fontSize: 15, lineHeight: 23 },
+  wrongVi: { fontSize: 15, color: C.ink, marginTop: 4 },
+  empty: { textAlign: 'center', marginTop: 60, color: C.mute, fontSize: 15, lineHeight: 23 },
 });

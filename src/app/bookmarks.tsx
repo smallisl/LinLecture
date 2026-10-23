@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 
 import { TermList } from '@/components/term-list';
 import { allBookmarks, formatClock, loadLectures, type LectureRecord } from '@/lib/lectures';
+import { C } from '@/constants/theme';
 
 const ALL = '전체';
 
@@ -79,25 +80,25 @@ export default function BookmarksScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingTop: 60, paddingHorizontal: 24 },
+  container: { flex: 1, backgroundColor: C.paper, paddingTop: 60, paddingHorizontal: 24 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 18, gap: 18 },
-  back: { fontSize: 17, color: '#333' },
+  back: { fontSize: 17, color: C.ink2 },
   title: { fontSize: 22, fontWeight: '700' },
   chips: { flexGrow: 0 },
   chipsContent: { gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, backgroundColor: '#f1f1f1' },
-  chipOn: { backgroundColor: '#222' },
-  chipText: { fontSize: 14, color: '#444' },
-  chipTextOn: { color: '#fff', fontWeight: '700' },
-  count: { color: '#777', marginTop: 14, marginBottom: 8 },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, backgroundColor: C.khakiSoft },
+  chipOn: { backgroundColor: C.ink },
+  chipText: { fontSize: 14, color: C.ink2 },
+  chipTextOn: { color: C.paper, fontWeight: '700' },
+  count: { color: C.mute, marginTop: 14, marginBottom: 8 },
   list: { paddingBottom: 48 },
   group: { marginBottom: 22 },
-  groupTitle: { fontSize: 17, fontWeight: '700', color: '#111' },
-  groupSub: { fontSize: 13, color: '#888', marginTop: 2, marginBottom: 10 },
-  card: { padding: 14, borderRadius: 14, backgroundColor: '#f4f4f4', marginBottom: 10 },
-  time: { fontSize: 12, color: '#B3261E', marginBottom: 6, fontWeight: '700' },
-  ko: { fontSize: 15, lineHeight: 23, color: '#555' },
-  vi: { fontSize: 16, lineHeight: 24, color: '#183B73', fontWeight: '700', marginTop: 4 },
-  empty: { textAlign: 'center', marginTop: 60, color: '#888', fontSize: 15, lineHeight: 23 },
-  error: { color: '#d32f2f', marginTop: 24 },
+  groupTitle: { fontSize: 17, fontWeight: '700', color: C.ink },
+  groupSub: { fontSize: 13, color: C.mute, marginTop: 2, marginBottom: 10 },
+  card: { padding: 14, borderRadius: 14, backgroundColor: C.card, marginBottom: 10 },
+  time: { fontSize: 12, color: C.seal, marginBottom: 6, fontWeight: '700' },
+  ko: { fontSize: 15, lineHeight: 23, color: C.ink2 },
+  vi: { fontSize: 16, lineHeight: 24, color: C.ink, fontWeight: '700', marginTop: 4 },
+  empty: { textAlign: 'center', marginTop: 60, color: C.mute, fontSize: 15, lineHeight: 23 },
+  error: { color: C.seal, marginTop: 24 },
 });

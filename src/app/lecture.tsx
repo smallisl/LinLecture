@@ -7,6 +7,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 
 import { TermList } from '@/components/term-list';
 import { SERVER_URL } from '@/constants/config';
+import { C, R } from '@/constants/theme';
 import { checkServer, SERVER_HELP } from '@/lib/server';
 import { loadViewMode, nextViewMode, saveViewMode, VIEW_LABEL, type ViewMode } from '@/lib/view-mode';
 import { addLecture, collectTerms, type LectureRecord, type Segment, type Term } from '@/lib/lectures';
@@ -411,8 +412,7 @@ export default function LectureScreen() {
           <Text style={styles.recordState}>{paused ? '일시정지' : isStreaming ? '녹음 중' : busy ? '처리 중' : '대기 중'}</Text>
         </View>
         <View style={styles.fontControls}>
-          <Text style={styles.mic}>♩</Text>
-          <Pressable onPress={() => setFontSize(value => Math.max(14, value - 1))} style={styles.fontButton}><Text style={styles.fontButtonText}>A−</Text></Pressable>
+                    <Pressable onPress={() => setFontSize(value => Math.max(14, value - 1))} style={styles.fontButton}><Text style={styles.fontButtonText}>A−</Text></Pressable>
           <Text style={styles.fontValue}>{fontSize}</Text>
           <Pressable onPress={() => setFontSize(value => Math.min(24, value + 1))} style={styles.fontButton}><Text style={styles.fontButtonText}>A+</Text></Pressable>
         </View>
@@ -421,8 +421,7 @@ export default function LectureScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         {segments.length === 0 && (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>🎙</Text>
-            <Text style={styles.emptyTitle}>강의 음성을 기다리고 있어요</Text>
+                        <Text style={styles.emptyTitle}>강의 음성을 기다리고 있어요</Text>
             <Text style={styles.emptyBody}>녹음을 시작하면 한국어 원문과 베트남어 번역이 순서대로 표시됩니다.</Text>
           </View>
         )}
@@ -445,7 +444,7 @@ export default function LectureScreen() {
             <Text style={styles.pendingText}>{statusMessage}</Text>
           </View>
         )}
-        {saveFinished && <Text style={styles.saved}>✓ 강의가 저장되었습니다</Text>}
+        {saveFinished && <Text style={styles.saved}>강의가 저장되었습니다</Text>}
         {!!errorMessage && <View style={styles.errorBox}><Text style={styles.errorTitle}>오류</Text><Text style={styles.errorText}>{errorMessage}</Text></View>}
         {saveFailed && !busy && <Pressable style={styles.retryButton} onPress={retrySave}><Text style={styles.retryText}>저장 다시 시도</Text></Pressable>}
       </ScrollView>
@@ -453,80 +452,76 @@ export default function LectureScreen() {
       <View style={styles.bottomBar}>
         {!sessionStarted && !busy && !saveFinished && (
           <Pressable style={styles.primaryButton} onPress={startLecture}>
-            <Text style={styles.primaryButtonText}>🎙  강의 녹음 시작</Text>
+            <Text style={styles.primaryButtonText}>강의 녹음 시작</Text>
           </Pressable>
         )}
         {(isStreaming || paused) && !stopping && (
           <View style={styles.actionRow}>
             <Pressable style={styles.pauseButton} onPress={() => void togglePause()}>
-              <Text style={styles.pauseText}>{paused ? '▶  계속 녹음' : 'Ⅱ  일시정지'}</Text>
+              <Text style={styles.pauseText}>{paused ? '계속 녹음' : '일시정지'}</Text>
             </Pressable>
             <Pressable style={styles.stopButton} onPress={stopLecture}>
-              <Text style={styles.stopText}>■  녹음 종료</Text>
+              <Text style={styles.stopText}>녹음 종료</Text>
             </Pressable>
           </View>
         )}
         {busy && <Text style={styles.bottomInfo}>마지막 음성을 처리하고 저장하고 있습니다...</Text>}
-        {saveFinished && <Pressable style={styles.primaryButton} onPress={closeLecture}><Text style={styles.primaryButtonText}>✓  완료 · 돌아가기</Text></Pressable>}
+        {saveFinished && <Pressable style={styles.primaryButton} onPress={closeLecture}><Text style={styles.primaryButtonText}>완료 · 돌아가기</Text></Pressable>}
         {saveFailed && !busy && <Pressable style={styles.primaryButton} onPress={retrySave}><Text style={styles.primaryButtonText}>저장 다시 시도</Text></Pressable>}
       </View>
     </View>
   );
 }
 
-const BLUE = '#183B73';
-const PALE = '#F3F5FB';
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PALE, paddingTop: 55 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingBottom: 20 },
-  back: { width: 44, height: 44, backgroundColor: '#FFFFFF', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  backText: { fontSize: 38, color: BLUE, marginTop: -7 },
+  container: { flex: 1, backgroundColor: C.paper, paddingTop: 55 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18, paddingBottom: 14 },
+  back: { width: 44, height: 44, backgroundColor: C.khakiSoft, borderRadius: R.button, alignItems: 'center', justifyContent: 'center' },
+  backText: { fontSize: 34, color: C.ink, marginTop: -6 },
   headerCenter: { flex: 1, alignItems: 'center', paddingHorizontal: 6 },
-  headerTitle: { color: BLUE, fontWeight: '800', fontSize: 15 },
-  language: { color: '#7251C4', fontWeight: '800', fontSize: 17, marginTop: 5 },
+  headerTitle: { color: C.ink, fontWeight: '700', fontSize: 14 },
+  language: { color: C.mute, fontWeight: '600', fontSize: 12, marginTop: 4, letterSpacing: 1 },
   headerSpacer: { width: 44 },
-  modeButton: { minWidth: 44, height: 44, paddingHorizontal: 6, backgroundColor: '#FFFFFF', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  modeText: { color: BLUE, fontWeight: '800', fontSize: 12 },
-  toolbar: { paddingHorizontal: 18, paddingVertical: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  timerGroup: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#A4B1C4', marginRight: 5 },
-  dotActive: { backgroundColor: '#148563' },
-  timer: { fontSize: 29, fontWeight: '900', color: BLUE, fontVariant: ['tabular-nums'] },
-  recordState: { fontSize: 12, color: '#526987', fontWeight: '700', marginLeft: 5 },
-  fontControls: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-  mic: { fontSize: 18, color: BLUE },
-  fontButton: { padding: 4 },
-  fontButtonText: { color: BLUE, fontSize: 19, fontWeight: '800' },
-  fontValue: { fontSize: 16, color: '#526987', fontWeight: '700' },
+  modeButton: { minWidth: 44, height: 44, paddingHorizontal: 6, backgroundColor: C.khakiSoft, borderRadius: R.button, alignItems: 'center', justifyContent: 'center' },
+  modeText: { color: C.ink, fontWeight: '800', fontSize: 12 },
+  toolbar: { paddingHorizontal: 20, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  timerGroup: { flexDirection: 'row', alignItems: 'baseline', flexShrink: 1 },
+  dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: C.mute, marginRight: 6, alignSelf: 'center' },
+  dotActive: { backgroundColor: C.seal },
+  timer: { fontSize: 34, fontWeight: '900', color: C.ink, fontVariant: ['tabular-nums'], letterSpacing: -1 },
+  recordState: { fontSize: 12, color: C.seal, fontWeight: '700', marginLeft: 8 },
+  fontControls: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  fontButton: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: C.khakiSoft },
+  fontButtonText: { color: C.ink, fontSize: 15, fontWeight: '800' },
+  fontValue: { fontSize: 14, color: C.ink2, fontWeight: '700' },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: 17, paddingTop: 5, paddingBottom: 30, gap: 13 },
-  emptyCard: { backgroundColor: '#FFFFFF', padding: 30, borderRadius: 22, alignItems: 'center', marginTop: 12 },
-  emptyIcon: { fontSize: 40, marginBottom: 15 },
-  emptyTitle: { fontSize: 17, color: BLUE, fontWeight: '800', marginBottom: 10, textAlign: 'center' },
-  emptyBody: { fontSize: 14, color: '#7487A2', lineHeight: 22, textAlign: 'center' },
-  segmentCard: { backgroundColor: '#FFFFFF', padding: 19, borderRadius: 22, shadowColor: '#15284D', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
-  segmentTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  timestamp: { fontSize: 15, color: '#6C7F9D' },
-  bookmark: { fontSize: 25, color: '#6C7F9D' },
-  bookmarkActive: { color: '#356BD4' },
-  korean: { color: '#657895', marginBottom: 11 },
-  vietnamese: { color: '#142D53', fontWeight: '700' },
-  pendingCard: { backgroundColor: '#E5ECFA', borderColor: '#99AED4', borderWidth: 1, borderStyle: 'dashed', borderRadius: 22, padding: 20, minHeight: 112 },
-  pendingSmall: { color: '#5C79AA', fontSize: 13, marginBottom: 10 },
-  pendingText: { color: '#7287AA', fontSize: 15, lineHeight: 23 },
-  bottomBar: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 27, backgroundColor: PALE },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 30, gap: 12 },
+  emptyCard: { backgroundColor: C.card, borderWidth: 1, borderColor: C.line, padding: 28, borderRadius: R.card, alignItems: 'center', marginTop: 12 },
+  emptyTitle: { fontSize: 16, color: C.ink, fontWeight: '700', marginBottom: 8, textAlign: 'center' },
+  emptyBody: { fontSize: 14, color: C.ink2, lineHeight: 22, textAlign: 'center' },
+  segmentCard: { backgroundColor: C.card, padding: 16, borderRadius: R.card, borderWidth: 1, borderColor: C.khakiSoft },
+  segmentTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  timestamp: { fontSize: 12, color: C.mute, fontVariant: ['tabular-nums'] },
+  bookmark: { fontSize: 22, color: C.mute },
+  bookmarkActive: { color: C.seal },
+  korean: { color: C.ink2, marginBottom: 6 },
+  vietnamese: { color: C.ink, fontWeight: '700' },
+  pendingCard: { borderColor: C.khaki, borderWidth: 1, borderStyle: 'dashed', borderRadius: R.card, padding: 18, minHeight: 96 },
+  pendingSmall: { color: C.seal, fontSize: 12, fontWeight: '700', marginBottom: 8 },
+  pendingText: { color: C.ink2, fontSize: 14, lineHeight: 22 },
+  bottomBar: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 27, backgroundColor: C.paper },
   actionRow: { flexDirection: 'row', gap: 10 },
-  pauseButton: { flex: 1, backgroundColor: '#E2EBFC', borderRadius: 16, paddingVertical: 17, alignItems: 'center' },
-  pauseText: { fontSize: 16, color: '#2456A1', fontWeight: '800' },
-  stopButton: { flex: 1, backgroundColor: '#2759B3', borderRadius: 16, paddingVertical: 17, alignItems: 'center' },
-  stopText: { fontSize: 16, color: '#FFFFFF', fontWeight: '800' },
-  primaryButton: { backgroundColor: '#2759B3', borderRadius: 16, paddingVertical: 18, alignItems: 'center' },
-  primaryButtonText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
-  bottomInfo: { color: '#526987', textAlign: 'center', fontSize: 14, padding: 14 },
-  saved: { color: '#148563', fontSize: 15, fontWeight: '800', textAlign: 'center', marginTop: 8 },
-  errorBox: { backgroundColor: '#FFF0F0', padding: 14, borderRadius: 12 },
-  errorTitle: { color: '#9E2530', fontWeight: '800', marginBottom: 4 },
-  errorText: { color: '#9E2530', fontSize: 13 },
-  retryButton: { padding: 12, borderRadius: 12, backgroundColor: BLUE, alignItems: 'center' },
-  retryText: { color: '#FFFFFF', fontWeight: '700' },
+  pauseButton: { flex: 1, backgroundColor: C.khaki, borderRadius: R.button, paddingVertical: 17, alignItems: 'center' },
+  pauseText: { fontSize: 16, color: C.ink, fontWeight: '800' },
+  stopButton: { flex: 1, backgroundColor: C.ink, borderRadius: R.button, paddingVertical: 17, alignItems: 'center' },
+  stopText: { fontSize: 16, color: C.onInk, fontWeight: '800' },
+  primaryButton: { backgroundColor: C.ink, borderRadius: R.button, paddingVertical: 18, alignItems: 'center' },
+  primaryButtonText: { color: C.onInk, fontSize: 17, fontWeight: '800' },
+  bottomInfo: { color: C.ink2, textAlign: 'center', fontSize: 14, padding: 14 },
+  saved: { color: C.ok, fontSize: 15, fontWeight: '800', textAlign: 'center', marginTop: 8 },
+  errorBox: { backgroundColor: C.sealSoft, padding: 14, borderRadius: 12 },
+  errorTitle: { color: C.seal, fontWeight: '800', marginBottom: 4 },
+  errorText: { color: C.seal, fontSize: 13 },
+  retryButton: { padding: 12, borderRadius: 12, backgroundColor: C.ink, alignItems: 'center' },
+  retryText: { color: C.onInk, fontWeight: '700' },
 });

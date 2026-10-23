@@ -4,6 +4,7 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Tex
 
 import { LectureDetail } from '@/components/lecture-detail';
 import { deleteLecture, loadLectures, searchLectures, summarize, updateLecture, type LectureRecord } from '@/lib/lectures';
+import { C } from '@/constants/theme';
 
 export default function HistoryScreen() {
   const [items, setItems] = useState<LectureRecord[]>([]);
@@ -115,15 +116,15 @@ export default function HistoryScreen() {
               </Text>
             ))}
             <Pressable style={styles.exportButton} onPress={exportRecords}>
-              <Text style={styles.exportText}>📤 기록 내보내기 (JSON)</Text>
+              <Text style={styles.exportText}>기록 내보내기 (JSON)</Text>
             </Pressable>
           </View>
           <TextInput
             style={styles.search}
             value={query}
             onChangeText={setQuery}
-            placeholder="🔍 강의 내용 검색 (예: 인터럽트)"
-            placeholderTextColor="#999"
+            placeholder="강의 내용 검색 (예: 인터럽트)"
+            placeholderTextColor={C.mute}
             clearButtonMode="while-editing"
             autoCorrect={false}
             returnKeyType="search"
@@ -156,36 +157,36 @@ function Tile({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingTop: 60, paddingHorizontal: 24 },
+  container: { flex: 1, backgroundColor: C.paper, paddingTop: 60, paddingHorizontal: 24 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, gap: 18 },
-  back: { fontSize: 17, color: '#333' },
+  back: { fontSize: 17, color: C.ink2 },
   title: { fontSize: 22, fontWeight: '700' },
   content: { paddingBottom: 48 },
-  summary: { borderWidth: 1, borderColor: '#e2e2e2', borderRadius: 14, padding: 16, marginBottom: 20 },
+  summary: { borderWidth: 1, borderColor: C.line, borderRadius: 14, padding: 16, marginBottom: 20 },
   summaryTitle: { fontSize: 16, fontWeight: '700', marginBottom: 12 },
   tiles: { flexDirection: 'row', gap: 10, marginBottom: 12 },
-  tile: { flex: 1, backgroundColor: '#f4f4f4', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  tileValue: { fontSize: 20, fontWeight: '700', color: '#111' },
-  tileLabel: { fontSize: 12, color: '#777', marginTop: 2 },
-  subjectRow: { fontSize: 14, color: '#444', marginBottom: 4 },
-  exportButton: { marginTop: 12, backgroundColor: '#222', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  exportText: { color: '#fff', fontWeight: '700' },
-  count: { color: '#777', marginBottom: 14 },
-  search: { borderWidth: 1, borderColor: '#ddd', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: '#111', marginBottom: 12 },
-  noResult: { color: '#888', textAlign: 'center', marginTop: 20 },
-  card: { padding: 18, borderRadius: 14, backgroundColor: '#f4f4f4', marginBottom: 14 },
+  tile: { flex: 1, backgroundColor: C.card, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  tileValue: { fontSize: 20, fontWeight: '700', color: C.ink },
+  tileLabel: { fontSize: 12, color: C.mute, marginTop: 2 },
+  subjectRow: { fontSize: 14, color: C.ink2, marginBottom: 4 },
+  exportButton: { marginTop: 12, backgroundColor: C.ink, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  exportText: { color: C.paper, fontWeight: '700' },
+  count: { color: C.mute, marginBottom: 14 },
+  search: { borderWidth: 1, borderColor: C.line, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: C.ink, marginBottom: 12 },
+  noResult: { color: C.mute, textAlign: 'center', marginTop: 20 },
+  card: { padding: 18, borderRadius: 14, backgroundColor: C.card, marginBottom: 14 },
   subject: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
-  date: { color: '#777', fontSize: 13, marginBottom: 10 },
-  statsLine: { color: '#555', fontSize: 13, lineHeight: 19 },
+  date: { color: C.mute, fontSize: 13, marginBottom: 10 },
+  statsLine: { color: C.ink2, fontSize: 13, lineHeight: 19 },
   preview: { fontSize: 15, lineHeight: 23 },
-  more: { marginTop: 12, textAlign: 'right', color: '#555', fontWeight: '600' },
+  more: { marginTop: 12, textAlign: 'right', color: C.ink2, fontWeight: '600' },
   section: { fontSize: 18, fontWeight: '700', marginTop: 20, marginBottom: 10 },
-  panel: { backgroundColor: '#f4f4f4', borderRadius: 14, padding: 16 },
+  panel: { backgroundColor: C.card, borderRadius: 14, padding: 16 },
   body: { fontSize: 16, lineHeight: 26 },
   bookmarkPanel: { marginBottom: 10 },
   bookmarkVi: { fontWeight: '700', marginTop: 6 },
-  deleteButton: { marginTop: 28, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: '#E6B4B4', alignItems: 'center' },
-  deleteText: { color: '#B3261E', fontWeight: '700', fontSize: 15 },
-  empty: { textAlign: 'center', marginTop: 80, color: '#888', fontSize: 16 },
-  error: { color: '#d32f2f', marginTop: 24 },
+  deleteButton: { marginTop: 28, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: C.seal, alignItems: 'center' },
+  deleteText: { color: C.seal, fontWeight: '700', fontSize: 15 },
+  empty: { textAlign: 'center', marginTop: 80, color: C.mute, fontSize: 16 },
+  error: { color: C.seal, marginTop: 24 },
 });

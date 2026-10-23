@@ -1,9 +1,11 @@
 
 import { Stack } from 'expo-router';
 
+import { C } from '@/constants/theme';
+
 export default function RootLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.paper } }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="lecture" />
       <Stack.Screen name="history" />

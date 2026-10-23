@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View 
 import { TermList } from '@/components/term-list';
 import { formatClock, lectureNotesText, type LectureRecord } from '@/lib/lectures';
 import { loadViewMode, nextViewMode, saveViewMode, VIEW_LABEL, type ViewMode } from '@/lib/view-mode';
+import { C } from '@/constants/theme';
 
 type Props = {
   item: LectureRecord;
@@ -60,7 +61,7 @@ export function LectureDetail({ item, onSave, onDelete }: Props) {
         onChangeText={setTitle}
         onBlur={saveIfChanged}
         placeholder="강의 제목 (예: 3주차 인터럽트)"
-        placeholderTextColor="#aaa"
+        placeholderTextColor={C.mute}
         maxLength={40}
         returnKeyType="done"
       />
@@ -77,14 +78,14 @@ export function LectureDetail({ item, onSave, onDelete }: Props) {
         onChangeText={setMemo}
         onBlur={saveIfChanged}
         placeholder="메모 (질문할 내용, 과제, 시험 범위 등)"
-        placeholderTextColor="#aaa"
+        placeholderTextColor={C.mute}
         multiline
         maxLength={1000}
       />
 
       <View style={styles.actions}>
         <Pressable style={styles.action} onPress={shareNotes}>
-          <Text style={styles.actionText}>📝 노트 내보내기</Text>
+          <Text style={styles.actionText}>노트 내보내기</Text>
         </Pressable>
         <Pressable style={styles.action} onPress={changeMode}>
           <Text style={styles.actionText}>보기: {VIEW_LABEL[mode]}</Text>
@@ -137,21 +138,21 @@ export function LectureDetail({ item, onSave, onDelete }: Props) {
 
 const styles = StyleSheet.create({
   content: { paddingBottom: 48 },
-  titleInput: { fontSize: 20, fontWeight: '700', color: '#111', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#e2e2e2' },
-  subject: { color: '#666', fontSize: 14, marginTop: 10 },
-  statsLine: { color: '#777', fontSize: 13, lineHeight: 19, marginTop: 4 },
-  memo: { marginTop: 14, minHeight: 70, borderWidth: 1, borderColor: '#e2e2e2', borderRadius: 12, padding: 12, fontSize: 15, color: '#111', textAlignVertical: 'top' },
+  titleInput: { fontSize: 20, fontWeight: '700', color: C.ink, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.line },
+  subject: { color: C.ink2, fontSize: 14, marginTop: 10 },
+  statsLine: { color: C.mute, fontSize: 13, lineHeight: 19, marginTop: 4 },
+  memo: { marginTop: 14, minHeight: 70, borderWidth: 1, borderColor: C.line, borderRadius: 12, padding: 12, fontSize: 15, color: C.ink, textAlignVertical: 'top' },
   actions: { flexDirection: 'row', gap: 10, marginTop: 14 },
-  action: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#222', alignItems: 'center' },
-  actionText: { color: '#fff', fontWeight: '700' },
+  action: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: C.ink, alignItems: 'center' },
+  actionText: { color: C.paper, fontWeight: '700' },
   section: { fontSize: 18, fontWeight: '700', marginTop: 22, marginBottom: 10 },
-  panel: { backgroundColor: '#f4f4f4', borderRadius: 14, padding: 14 },
+  panel: { backgroundColor: C.card, borderRadius: 14, padding: 14 },
   gap: { marginBottom: 10 },
-  time: { color: '#888', fontSize: 12, marginBottom: 6 },
-  ko: { fontSize: 15, lineHeight: 23, color: '#555' },
-  vi: { fontSize: 16, lineHeight: 24, color: '#183B73', fontWeight: '700', marginTop: 4 },
+  time: { color: C.mute, fontSize: 12, marginBottom: 6 },
+  ko: { fontSize: 15, lineHeight: 23, color: C.ink2 },
+  vi: { fontSize: 16, lineHeight: 24, color: C.ink, fontWeight: '700', marginTop: 4 },
   body: { fontSize: 16, lineHeight: 26 },
   bold: { fontWeight: '700' },
-  deleteButton: { marginTop: 28, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: '#E6B4B4', alignItems: 'center' },
-  deleteText: { color: '#B3261E', fontWeight: '700', fontSize: 15 },
+  deleteButton: { marginTop: 28, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: C.seal, alignItems: 'center' },
+  deleteText: { color: C.seal, fontWeight: '700', fontSize: 15 },
 });

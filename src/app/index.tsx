@@ -1,27 +1,69 @@
 
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 
-const SUBJECTS = [
-  '임베디드시스템및실습',
-  '인공지능',
-  '데이터베이스',
-  '소프트웨어공학',
-  '네트워크프로그래밍및보안',
-];
+import { addSubject, DEFAULT_SUBJECTS, loadSubjects, removeSubject } from '@/lib/subjects';
 
 export default function HomeScreen() {
+  const [subjects, setSubjects] = useState<string[]>(DEFAULT_SUBJECTS);
   const [selectedSubject, setSelectedSubject] =
     useState('임베디드시스템및실습');
 
   const [showSubjects, setShowSubjects] = useState(false);
+  const [newSubject, setNewSubject] = useState('');
+
+  // 저장된 과목 목록 불러오기
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    void loadSubjects().then(list => {
+      if (!active) return;
+      setSubjects(list);
+      setSelectedSubject(current => list.includes(current) ? current : list[0]);
+    });
+    return () => { active = false; };
+  }, []));
+
+  const createSubject = async () => {
+    try {
+      const list = await addSubject(newSubject);
+      const added = list[list.length - 1];
+      setSubjects(list);
+      setSelectedSubject(added);
+      setNewSubject('');
+      setShowSubjects(false);
+    } catch (e: any) {
+      Alert.alert('과목 추가', e?.message || '과목을 추가하지 못했습니다.');
+    }
+  };
+
+  // 길게 눌러 과목 삭제 (저장된 강의 기록은 지워지지 않음)
+  const confirmRemoveSubject = (subject: string) => {
+    Alert.alert('과목 삭제', `'${subject}' 과목을 목록에서 삭제할까요?\n이미 저장된 강의 기록은 그대로 남습니다.`, [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const list = await removeSubject(subject);
+            setSubjects(list);
+            if (selectedSubject === subject) setSelectedSubject(list[0]);
+          } catch (e: any) {
+            Alert.alert('과목 삭제', e?.message || '과목을 삭제하지 못했습니다.');
+          }
+        },
+      },
+    ]);
+  };
 
   const selectSubject = (subject: string) => {
     setSelectedSubject(subject);
@@ -73,17 +115,34 @@ export default function HomeScreen() {
 
       {showSubjects && (
         <View style={styles.subjectList}>
-          {SUBJECTS.map((subject) => (
+          {subjects.map((subject) => (
             <Pressable
               key={subject}
               style={styles.subjectItem}
               onPress={() => selectSubject(subject)}
+              onLongPress={() => confirmRemoveSubject(subject)}
             >
-              <Text style={styles.subjectItemText}>
+              <Text style={[styles.subjectItemText, subject === selectedSubject && styles.subjectItemSelected]}>
                 {subject}
               </Text>
             </Pressable>
           ))}
+          <View style={styles.addRow}>
+            <TextInput
+              style={styles.addInput}
+              value={newSubject}
+              onChangeText={setNewSubject}
+              placeholder="새 과목 이름"
+              placeholderTextColor="#999"
+              returnKeyType="done"
+              onSubmitEditing={createSubject}
+              maxLength={30}
+            />
+            <Pressable style={styles.addButton} onPress={createSubject}>
+              <Text style={styles.addButtonText}>추가</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.hint}>과목을 길게 누르면 삭제할 수 있습니다.</Text>
         </View>
       )}
 
@@ -102,6 +161,15 @@ export default function HomeScreen() {
       >
         <Text style={styles.historyButtonText}>
           📚 이전 강의 기록
+        </Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.historyButton}
+        onPress={() => router.push('/vocab')}
+      >
+        <Text style={styles.historyButtonText}>
+          📘 전공 단어장
         </Text>
       </Pressable>
     </ScrollView>
@@ -188,6 +256,46 @@ const styles = StyleSheet.create({
 
   subjectItemText: {
     fontSize: 15,
+  },
+
+  subjectItemSelected: {
+    fontWeight: '700',
+  },
+
+  addRow: {
+    flexDirection: 'row',
+    gap: 8,
+    padding: 10,
+  },
+
+  addInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#dddddd',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: '#111111',
+  },
+
+  addButton: {
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: '#222222',
+    justifyContent: 'center',
+  },
+
+  addButtonText: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+
+  hint: {
+    fontSize: 12,
+    color: '#888888',
+    paddingHorizontal: 12,
+    paddingBottom: 10,
   },
 
   startButton: {

@@ -7,6 +7,7 @@ const { execFile } = require("child_process");
 const { logUsage, LOG_PATH, ensureLogFile } = require("./usage-log");
 const { isSilent, isPromptEcho } = require("./speech-filter");
 const { findTerms } = require("./glossary");
+const { translate, describeTranslator } = require("./translator");
 
 const app = express();
 const PORT = 3000;
@@ -22,7 +23,6 @@ const MODEL_PATH = path.join(
 
 const uploadDir = path.join(__dirname, "uploads");
 
-const TRANSLATE_URL = "http://127.0.0.1:5000/translate";
 
 // Whisper 에 주는 전공 용어 힌트 (환각 필터에서도 사용)
 const WHISPER_PROMPT =
@@ -70,51 +70,6 @@ function createWavBuffer(pcmBuffer, sampleRate, channels) {
   return wavBuffer;
 }
 
-async function translateToVietnamese(koreanText) {
-  if (!koreanText?.trim()) return "";
-
-  const startedAt = Date.now();
-
-  try {
-    console.log("🌐 베트남어 번역 시작...");
-
-    const response = await fetch(TRANSLATE_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        q: koreanText,
-        source: "ko",
-        target: "vi",
-        format: "text",
-      }),
-    });
-
-    if (!response.ok) {
-      const detail = await response.text();
-      throw new Error(
-        `LibreTranslate HTTP ${response.status}: ${detail}`
-      );
-    }
-
-    const data = await response.json();
-    const translatedText = data.translatedText || "";
-
-    console.log(
-      `🌐 번역 시간: ${((Date.now() - startedAt) / 1000).toFixed(2)}초`
-    );
-    console.log(
-      "🇻🇳 베트남어:",
-      translatedText || "(번역 결과 없음)"
-    );
-
-    return translatedText;
-  } catch (error) {
-    console.error("❌ 번역 오류:", error.message);
-    return "";
-  }
-}
 
 app.post("/transcribe-base64", (req, res) => {
   console.log("");
@@ -265,13 +220,16 @@ app.post("/transcribe-base64", (req, res) => {
           transcript || "(인식 결과 없음)"
         );
 
+        const terms = findTerms(transcript);
         let translation = "";
         let translateSec = 0;
+        let engine = "";
 
         if (transcript) {
           const translateStartedAt = Date.now();
-          translation = await translateToVietnamese(transcript);
+          ({ text: translation, engine } = await translate(transcript, { sessionId, terms }));
           translateSec = (Date.now() - translateStartedAt) / 1000;
+          console.log(`🌐 번역(${engine}) ${translateSec.toFixed(2)}초:`, translation || "(번역 결과 없음)");
         }
 
         logUsage({
@@ -280,6 +238,7 @@ app.post("/transcribe-base64", (req, res) => {
           translateSec: translateSec.toFixed(2),
           koChars: transcript.length,
           viChars: translation.length,
+          engine,
           status: !transcript
             ? "empty"
             : translation
@@ -287,7 +246,6 @@ app.post("/transcribe-base64", (req, res) => {
               : "translate_error",
         });
 
-        const terms = findTerms(transcript);
         if (terms.length) {
           console.log("📘 전공 용어:", terms.map((t) => `${t.ko}=${t.vi}`).join(", "));
         }
@@ -322,7 +280,7 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log("🚀 LinLecture STT + Translation Server");
   console.log(`PORT: ${PORT}`);
   console.log("STT: Whisper Small");
-  console.log("TRANSLATION: LibreTranslate");
+  void describeTranslator().then((d) => console.log("TRANSLATION:", d));
   console.log("KO → VI");
   console.log("API 비용: 0원");
   console.log("=================================");

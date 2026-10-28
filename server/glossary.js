@@ -57,6 +57,58 @@ const GLOSSARY = [
   { ko: ["알고리즘"], vi: "thuật toán", en: "algorithm" },
   { ko: ["자료구조"], vi: "cấu trúc dữ liệu", en: "data structure" },
   { ko: ["데이터베이스"], vi: "cơ sở dữ liệu", en: "database" },
+
+  // 인공지능
+  { ko: ["인공지능"], vi: "trí tuệ nhân tạo", en: "artificial intelligence" },
+  { ko: ["머신러닝", "기계학습", "기계 학습"], vi: "học máy", en: "machine learning" },
+  { ko: ["딥러닝", "심층학습"], vi: "học sâu", en: "deep learning" },
+  { ko: ["신경망", "뉴럴 네트워크"], vi: "mạng nơ-ron", en: "neural network" },
+  { ko: ["데이터셋", "데이터 세트"], vi: "tập dữ liệu", en: "dataset" },
+  { ko: ["과적합", "오버피팅"], vi: "quá khớp", en: "overfitting" },
+  { ko: ["경사하강법", "경사 하강법"], vi: "giảm gradient", en: "gradient descent" },
+  { ko: ["손실함수", "손실 함수"], vi: "hàm mất mát", en: "loss function" },
+  { ko: ["지도학습", "지도 학습"], vi: "học có giám sát", en: "supervised learning" },
+  { ko: ["비지도학습", "비지도 학습"], vi: "học không giám sát", en: "unsupervised learning" },
+  { ko: ["강화학습", "강화 학습"], vi: "học tăng cường", en: "reinforcement learning" },
+  { ko: ["탐색"], vi: "tìm kiếm (thuật toán)", en: "search" },
+
+  // 데이터베이스
+  { ko: ["테이블"], vi: "bảng", en: "table" },
+  { ko: ["쿼리", "질의"], vi: "truy vấn", en: "query" },
+  { ko: ["기본키", "기본 키", "프라이머리 키"], vi: "khóa chính", en: "primary key" },
+  { ko: ["외래키", "외래 키", "포린 키"], vi: "khóa ngoại", en: "foreign key" },
+  { ko: ["정규화"], vi: "chuẩn hóa", en: "normalization" },
+  { ko: ["트랜잭션"], vi: "giao dịch", en: "transaction" },
+  { ko: ["인덱스"], vi: "chỉ mục", en: "index" },
+  { ko: ["조인"], vi: "phép nối", en: "join" },
+  { ko: ["스키마"], vi: "lược đồ", en: "schema" },
+
+  // 네트워크 · 보안
+  { ko: ["네트워크"], vi: "mạng", en: "network" },
+  { ko: ["패킷"], vi: "gói tin", en: "packet" },
+  { ko: ["라우터"], vi: "bộ định tuyến", en: "router" },
+  { ko: ["IP 주소", "아이피 주소", "IP주소"], vi: "địa chỉ IP", en: "IP address" },
+  { ko: ["TCP", "티씨피"], vi: "TCP", en: "Transmission Control Protocol" },
+  { ko: ["UDP", "유디피"], vi: "UDP", en: "User Datagram Protocol" },
+  { ko: ["소켓"], vi: "socket", en: "socket" },
+  { ko: ["암호화"], vi: "mã hóa", en: "encryption" },
+  { ko: ["복호화"], vi: "giải mã", en: "decryption" },
+  { ko: ["방화벽"], vi: "tường lửa", en: "firewall" },
+  { ko: ["인증"], vi: "xác thực", en: "authentication" },
+  { ko: ["대역폭"], vi: "băng thông", en: "bandwidth" },
+  { ko: ["서버"], vi: "máy chủ", en: "server" },
+  { ko: ["클라이언트"], vi: "máy khách", en: "client" },
+
+  // 소프트웨어공학
+  { ko: ["요구사항", "요구 사항"], vi: "yêu cầu", en: "requirements" },
+  { ko: ["유지보수", "유지 보수"], vi: "bảo trì", en: "maintenance" },
+  { ko: ["버전 관리", "형상 관리"], vi: "quản lý phiên bản", en: "version control" },
+  { ko: ["단위 테스트", "유닛 테스트"], vi: "kiểm thử đơn vị", en: "unit test" },
+  { ko: ["애자일"], vi: "Agile", en: "agile" },
+  { ko: ["리팩토링", "리팩터링"], vi: "tái cấu trúc mã", en: "refactoring" },
+  { ko: ["객체지향", "객체 지향"], vi: "hướng đối tượng", en: "object-oriented" },
+  { ko: ["클래스"], vi: "lớp", en: "class" },
+  { ko: ["상속"], vi: "kế thừa", en: "inheritance" },
 ];
 
 const squash = (text) => text.replace(/\s+/g, "").toUpperCase();

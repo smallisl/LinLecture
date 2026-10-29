@@ -58,23 +58,64 @@ function buildPrompt(koreanText, previous, terms) {
   );
 }
 
-async function translateOllama(koreanText, previous, terms) {
+const SYSTEM_PROMPT =
+  "Bạn là phiên dịch viên Hàn–Việt cho bài giảng đại học ngành Kỹ thuật máy tính. " +
+  "Chỉ viết bằng tiếng Việt (được giữ thuật ngữ tiếng Anh như IP, TCP, CPU). " +
+  "Tuyệt đối không dùng chữ Hán/tiếng Trung và không để lại chữ Hàn. " +
+  "Chỉ trả về MỘT đoạn bản dịch, không giải thích, không nhắc lại câu gốc.";
+
+// 실사용 중 발견 (2026-10-29): qwen 이 가끔 중국어로 넘어가거나(一個网络…),
+// 한국어를 그대로 남기거나(팩시, 리처), "Bản dịch sang tiếng Việt:" 같은 설명을 붙임.
+const HANGUL_OR_HAN = /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF\u3400-\u4DBF\u4E00-\u9FFF\u3000-\u303F\uFF00-\uFFEF]/;
+
+// LLM 답에서 설명·따옴표·여러 줄을 정리해 번역 한 줄만 남긴다.
+function cleanOutput(raw) {
+  let text = (raw || "").trim();
+  // "Bản dịch (sang tiếng Việt):" 뒤만 쓰기
+  const label = text.match(/bản dịch[^:\n]*:\s*/i);
+  if (label) text = text.slice(label.index + label[0].length);
+  const lines = text
+    .split(/\n+/)
+    .map((l) => l.trim())
+    .filter((l) => l && !/^(đoạn văn|câu gốc|nguyên văn|giải thích|lưu ý|chú thích)\b/i.test(l));
+  text = lines.join(" ");
+  return text.replace(/^["“'「]+|["”'」]+$/g, "").replace(/\s+/g, " ").trim();
+}
+
+const hasForeignScript = (text) => HANGUL_OR_HAN.test(text);
+
+async function askOllama(userContent, temperature) {
   const response = await fetchWithTimeout(`${OLLAMA_URL}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: OLLAMA_MODEL,
       stream: false,
-      options: { temperature: 0.1 },
+      options: { temperature, num_predict: 256 },
       messages: [
-        { role: "system", content: "Bạn là phiên dịch viên Hàn–Việt cho bài giảng đại học ngành Kỹ thuật máy tính." },
-        { role: "user", content: buildPrompt(koreanText, previous, terms) },
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userContent },
       ],
     }),
-  }, 20000);
+  }, 30000); // 첫 요청은 모델을 메모리에 올리느라 오래 걸릴 수 있음
   if (!response.ok) throw new Error(`Ollama HTTP ${response.status}: ${await response.text()}`);
   const data = await response.json();
-  return (data.message?.content || "").trim().replace(/^["“]|["”]$/g, "");
+  return cleanOutput(data.message?.content);
+}
+
+// 한 번 더 시도해도 중국어·한국어가 섞이면 빈 문자열 → 바깥에서 LibreTranslate 사용
+async function translateOllama(koreanText, previous, terms) {
+  const prompt = buildPrompt(koreanText, previous, terms);
+  let text = await askOllama(prompt, 0.1);
+  if (text && !hasForeignScript(text)) return text;
+  console.log("↻ 번역에 중국어/한국어가 섞여 다시 시도:", text);
+  text = await askOllama(
+    prompt + "\n\nLƯU Ý: lần trước bạn dùng chữ Hán hoặc chữ Hàn. Viết lại HOÀN TOÀN bằng tiếng Việt.",
+    0,
+  );
+  if (text && !hasForeignScript(text)) return text;
+  console.log("⚠️ 다시 시도해도 섞임 → LibreTranslate 사용:", text);
+  return "";
 }
 
 // 반환: { text, engine } — engine 은 usage.csv 와 로그에 남긴다.
@@ -114,4 +155,4 @@ async function describeTranslator() {
   }
 }
 
-module.exports = { translate, describeTranslator, buildPrompt };
+module.exports = { translate, describeTranslator, buildPrompt, cleanOutput, hasForeignScript };

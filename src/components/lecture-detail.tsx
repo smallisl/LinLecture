@@ -3,7 +3,7 @@ import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View 
 
 import { TermList } from '@/components/term-list';
 import { formatClock, lectureNotesText, type LectureRecord } from '@/lib/lectures';
-import { loadViewMode, nextViewMode, saveViewMode, VIEW_LABEL, type ViewMode } from '@/lib/view-mode';
+import { loadViewMode, nextViewMode, saveViewMode, VIEW_NAME, type ViewMode } from '@/lib/view-mode';
 import { C } from '@/constants/theme';
 
 type Props = {
@@ -88,7 +88,7 @@ export function LectureDetail({ item, onSave, onDelete }: Props) {
           <Text style={styles.actionText}>노트 내보내기</Text>
         </Pressable>
         <Pressable style={styles.action} onPress={changeMode}>
-          <Text style={styles.actionText}>보기: {VIEW_LABEL[mode]}</Text>
+          <Text style={styles.actionText}>보기: {VIEW_NAME[mode]}</Text>
         </Pressable>
       </View>
 

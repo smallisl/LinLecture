@@ -9,7 +9,7 @@ import { TermList } from '@/components/term-list';
 import { SERVER_URL } from '@/constants/config';
 import { C, R } from '@/constants/theme';
 import { checkServer, SERVER_HELP } from '@/lib/server';
-import { loadViewMode, nextViewMode, saveViewMode, VIEW_LABEL, type ViewMode } from '@/lib/view-mode';
+import { loadViewMode, saveViewMode, VIEW_NAME, type ViewMode } from '@/lib/view-mode';
 import { addLecture, collectTerms, type LectureRecord, type Segment, type Term } from '@/lib/lectures';
 
 const DEFAULT_SUBJECT = '임베디드시스템및실습';
@@ -27,8 +27,7 @@ export default function LectureScreen() {
   const [fontSize, setFontSize] = useState(17);
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   useEffect(() => { void loadViewMode().then(setViewMode); }, []);
-  const changeViewMode = () => {
-    const next = nextViewMode(viewMode);
+  const changeViewMode = (next: ViewMode) => {
     setViewMode(next);
     void saveViewMode(next);
   };
@@ -400,9 +399,7 @@ export default function LectureScreen() {
           <Text style={styles.headerTitle} numberOfLines={1}>{selectedSubject} · {titleDate}</Text>
           <Text style={styles.language}>KO → VI</Text>
         </View>
-        <Pressable onPress={changeViewMode} style={styles.modeButton} accessibilityLabel="보기 방식 바꾸기">
-          <Text style={styles.modeText}>{VIEW_LABEL[viewMode]}</Text>
-        </Pressable>
+        <View style={styles.headerSpacer} />
       </View>
 
       <View style={styles.toolbar}>
@@ -412,10 +409,24 @@ export default function LectureScreen() {
           <Text style={styles.recordState}>{paused ? '일시정지' : isStreaming ? '녹음 중' : busy ? '처리 중' : '대기 중'}</Text>
         </View>
         <View style={styles.fontControls}>
-                    <Pressable onPress={() => setFontSize(value => Math.max(14, value - 1))} style={styles.fontButton}><Text style={styles.fontButtonText}>A−</Text></Pressable>
+          <Pressable onPress={() => setFontSize(value => Math.max(14, value - 1))} style={styles.fontButton}><Text style={styles.fontButtonText}>A−</Text></Pressable>
           <Text style={styles.fontValue}>{fontSize}</Text>
           <Pressable onPress={() => setFontSize(value => Math.min(24, value + 1))} style={styles.fontButton}><Text style={styles.fontButtonText}>A+</Text></Pressable>
         </View>
+      </View>
+
+      {/* 보기 방식: 오른쪽 위에 있으면 Expo 개발 메뉴 버튼에 가려져서(2026-10-29) 타이머 아래로 옮김 */}
+      <View style={styles.segment}>
+        {(['both', 'vi', 'ko'] as ViewMode[]).map(mode => (
+          <Pressable
+            key={mode}
+            onPress={() => changeViewMode(mode)}
+            style={[styles.segmentItem, viewMode === mode && styles.segmentOn]}
+            accessibilityLabel={`보기 방식 ${VIEW_NAME[mode]}`}
+          >
+            <Text style={[styles.segmentText, viewMode === mode && styles.segmentTextOn]}>{VIEW_NAME[mode]}</Text>
+          </Pressable>
+        ))}
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
@@ -482,8 +493,11 @@ const styles = StyleSheet.create({
   headerTitle: { color: C.ink, fontWeight: '700', fontSize: 14 },
   language: { color: C.mute, fontWeight: '600', fontSize: 12, marginTop: 4, letterSpacing: 1 },
   headerSpacer: { width: 44 },
-  modeButton: { minWidth: 44, height: 44, paddingHorizontal: 6, backgroundColor: C.khakiSoft, borderRadius: R.button, alignItems: 'center', justifyContent: 'center' },
-  modeText: { color: C.ink, fontWeight: '800', fontSize: 12 },
+  segment: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 12, padding: 3, borderRadius: 12, backgroundColor: C.khakiSoft },
+  segmentItem: { flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: 'center' },
+  segmentOn: { backgroundColor: C.ink },
+  segmentText: { fontSize: 13, fontWeight: '700', color: C.ink2 },
+  segmentTextOn: { color: C.onInk },
   toolbar: { paddingHorizontal: 20, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   timerGroup: { flexDirection: 'row', alignItems: 'baseline', flexShrink: 1 },
   dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: C.mute, marginRight: 6, alignSelf: 'center' },

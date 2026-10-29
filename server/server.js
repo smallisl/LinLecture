@@ -15,11 +15,13 @@ const PORT = 3000;
 const WHISPER_PATH =
   process.env.WHISPER_PATH || "/opt/homebrew/bin/whisper-cli";
 
-const MODEL_PATH = path.join(
-  __dirname,
-  "models",
-  "ggml-small.bin"
-);
+// Whisper 모델: 기본 small. 인식이 빠지는 단어가 많으면 medium 으로 바꿔 볼 것
+//   WHISPER_MODEL=ggml-medium.bin node server.js   (server/models 폴더에 파일 필요)
+const MODEL_NAME = process.env.WHISPER_MODEL || "ggml-small.bin";
+const MODEL_PATH = path.join(__dirname, "models", MODEL_NAME);
+if (!fs.existsSync(MODEL_PATH)) {
+  console.error(`❌ Whisper 모델 파일이 없음: ${MODEL_PATH}`);
+}
 
 const uploadDir = path.join(__dirname, "uploads");
 
@@ -279,7 +281,7 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log("=================================");
   console.log("🚀 LinLecture STT + Translation Server");
   console.log(`PORT: ${PORT}`);
-  console.log("STT: Whisper Small");
+  console.log(`STT: Whisper (${MODEL_NAME})`);
   void describeTranslator().then((d) => console.log("TRANSLATION:", d));
   console.log("KO → VI");
   console.log("API 비용: 0원");

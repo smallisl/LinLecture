@@ -5,6 +5,7 @@ export type ViewMode = 'both' | 'vi' | 'ko';
 const KEY = '@LinLecture:viewMode';
 
 export const VIEW_LABEL: Record<ViewMode, string> = { both: 'KO+VI', vi: 'VI', ko: 'KO' };
+export const VIEW_NAME: Record<ViewMode, string> = { both: '원문+번역', vi: '번역만', ko: '원문만' };
 
 export const nextViewMode = (mode: ViewMode): ViewMode => (mode === 'both' ? 'vi' : mode === 'vi' ? 'ko' : 'both');
 
